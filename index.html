@@ -25,26 +25,57 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 .click-zone{position:fixed;top:0;height:100%;width:12%;z-index:200;cursor:pointer;opacity:0}
 .click-zone.left{left:0}.click-zone.right{right:0}
 
-/* ====== MOBILE: Realistic page flip ====== */
+/* ====== MOBILE: Pre-rendered pages + GPU flip ====== */
 #mobile-reader{display:none;position:fixed;inset:0;z-index:500;overflow:hidden;background:#0d0d0d}
-#m-stage{position:relative;width:100%;height:100%;perspective:1500px;perspective-origin:center center;overflow:hidden;touch-action:none}
+#m-stage{position:relative;width:100%;height:100%;perspective:1800px;perspective-origin:center center;overflow:hidden;touch-action:none}
 
-/* Two-page structure: base page (always visible) + flip page (animates on top) */
-.m-base{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2}
-.m-base img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;-webkit-user-drag:none;user-select:none;display:block}
+/* All pages pre-rendered, absolutely stacked */
+.m-page{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  will-change:transform;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+  transform:translateZ(0);
+}
+.m-page img{
+  max-width:100%;max-height:100%;width:auto;height:auto;
+  object-fit:contain;pointer-events:none;-webkit-user-drag:none;user-select:none;
+  display:block;
+  transform:translateZ(0);
+}
 
-.m-flip{position:absolute;inset:0;z-index:5;transform-style:preserve-3d;transform-origin:left center;will-change:transform}
-.m-flip-front, .m-flip-back{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.m-flip-front img, .m-flip-back img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;-webkit-user-drag:none;user-select:none;display:block}
+/* Flip layer - the one that animates */
+.m-flip{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  transform-style:preserve-3d;
+  transform-origin:left center;
+  will-change:transform;
+  pointer-events:none;
+}
+.m-flip-front, .m-flip-back{
+  position:absolute;top:0;left:0;width:100%;height:100%;
+  display:flex;align-items:center;justify-content:center;
+  backface-visibility:hidden;-webkit-backface-visibility:hidden;
+}
+.m-flip-front img, .m-flip-back img{
+  max-width:100%;max-height:100%;width:auto;height:auto;
+  object-fit:contain;pointer-events:none;-webkit-user-drag:none;user-select:none;
+  display:block;
+}
 .m-flip-back{transform:rotateY(180deg)}
 
-/* Curl shadow on flip front */
-.m-curl{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 0.05s linear}
-.m-curl::before{content:'';position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0) 55%,rgba(0,0,0,0.06) 75%,rgba(0,0,0,0.2) 92%,rgba(0,0,0,0.3) 100%)}
-.m-curl::after{content:'';position:absolute;top:0;right:0;bottom:0;width:35%;background:linear-gradient(to left,rgba(255,255,255,0) 0%,rgba(255,255,255,0.05) 40%,rgba(255,255,255,0.1) 70%,rgba(255,255,255,0.14) 100%)}
-
-/* Page edge */
-.m-edge{position:absolute;inset:0;pointer-events:none;box-shadow:inset -2px 0 8px -2px rgba(0,0,0,0.15)}
+/* Curl shadow */
+.m-curl{
+  position:absolute;inset:0;pointer-events:none;opacity:0;
+}
+.m-curl::before{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(to right,rgba(0,0,0,0) 60%,rgba(0,0,0,0.08) 80%,rgba(0,0,0,0.22) 95%,rgba(0,0,0,0.3) 100%);
+}
+.m-curl::after{
+  content:'';position:absolute;top:0;right:0;bottom:0;width:30%;
+  background:linear-gradient(to left,rgba(255,255,255,0) 0%,rgba(255,255,255,0.04) 40%,rgba(255,255,255,0.09) 70%,rgba(255,255,255,0.12) 100%);
+}
 
 .m-book-shadow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:80%;height:20px;background:radial-gradient(ellipse,rgba(0,0,0,0.4) 0%,transparent 70%);z-index:0;pointer-events:none}
 
@@ -312,44 +343,57 @@ zoomOverlay.addEventListener('touchend',function(e){
   if(e.touches.length===0){zDragging=false;zoomContainer.classList.remove('dragging');zInitDist=0;}
 },{passive:true});
 
-// ====== MOBILE: SEAMLESS FLIP ======
+// ====== MOBILE: Pre-rendered, GPU-accelerated flip ======
 var mStage=document.getElementById('m-stage');
-var mCur=0;      // current page index (0-based)
+var mCur=0;      // 0-based current page index
 var mBusy=false;
-var mBaseImg=null;
-var mFlip=null;
+var mPages=[];   // all page elements
+var mFlipEl=null;
 var mFlipFrontImg=null;
 var mFlipBackImg=null;
-var mCurl=null;
+var mCurlEl=null;
 
 function mBuild(){
-  mStage.innerHTML='<div class="m-book-shadow"></div>';
+  // Clear everything except shadow
+  var shadow=mStage.querySelector('.m-book-shadow');
+  mStage.innerHTML='';
+  if(shadow)mStage.appendChild(shadow);
   
-  // Base layer - the page currently shown (always visible, never animates)
-  var base=document.createElement('div');
-  base.className='m-base';
-  mBaseImg=document.createElement('img');
-  mBaseImg.src=IMAGES[1];mBaseImg.alt='';
-  base.appendChild(mBaseImg);
-  var edge=document.createElement('div');
-  edge.className='m-edge';
-  base.appendChild(edge);
-  mStage.appendChild(base);
+  // Pre-render all pages
+  for(var i=0;i<TOTAL_PAGES;i++){
+    var p=document.createElement('div');
+    p.className='m-page';
+    p.setAttribute('data-idx',i);
+    var img=document.createElement('img');
+    img.src=IMAGES[i+1];img.alt='';
+    p.appendChild(img);
+    // All pages start behind
+    p.style.zIndex=1;
+    p.style.opacity='0';
+    mStage.appendChild(p);
+    mPages.push(p);
+  }
   
-  // Flip layer - animates on top of base
-  mFlip=document.createElement('div');
-  mFlip.className='m-flip';
-  mFlip.style.transform='rotateY(0deg)';
+  // Show page 0
+  mPages[0].style.zIndex=10;
+  mPages[0].style.opacity='1';
+  
+  // Flip layer (on top of everything)
+  mFlipEl=document.createElement('div');
+  mFlipEl.className='m-flip';
+  mFlipEl.style.zIndex=50;
+  mFlipEl.style.transform='rotateY(0deg)';
+  mFlipEl.style.opacity='0'; // hidden by default, only shown during flip
   
   var front=document.createElement('div');
   front.className='m-flip-front';
   mFlipFrontImg=document.createElement('img');
   mFlipFrontImg.src=IMAGES[1];mFlipFrontImg.alt='';
   front.appendChild(mFlipFrontImg);
-  mCurl=document.createElement('div');
-  mCurl.className='m-curl';
-  front.appendChild(mCurl);
-  mFlip.appendChild(front);
+  mCurlEl=document.createElement('div');
+  mCurlEl.className='m-curl';
+  front.appendChild(mCurlEl);
+  mFlipEl.appendChild(front);
   
   var back=document.createElement('div');
   back.className='m-flip-back';
@@ -360,9 +404,21 @@ function mBuild(){
   backCurl.className='m-curl';
   backCurl.style.transform='scaleX(-1)';
   back.appendChild(backCurl);
-  mFlip.appendChild(back);
+  mFlipEl.appendChild(back);
   
-  mStage.appendChild(mFlip);
+  mStage.appendChild(mFlipEl);
+}
+
+function mShowPage(idx){
+  for(var i=0;i<mPages.length;i++){
+    if(i===idx){
+      mPages[i].style.zIndex=10;
+      mPages[i].style.opacity='1';
+    }else{
+      mPages[i].style.zIndex=1;
+      mPages[i].style.opacity='0';
+    }
+  }
 }
 
 function mUpdateUI(){
@@ -371,115 +427,120 @@ function mUpdateUI(){
   progressBar.style.width=(pn/TOTAL_PAGES*100)+'%';
 }
 
-// Go to next page with flip animation
+// Flip to next page
 function mNext(){
   if(mBusy||mCur>=TOTAL_PAGES-1)return;
   mBusy=true;
   
-  var nextPage=mCur+2; // page after current (1-based)
-  if(nextPage>TOTAL_PAGES)nextPage=TOTAL_PAGES;
+  var nextIdx=mCur+1;
   
-  // Prepare: flip back shows next page
-  mFlipBackImg.src=IMAGES[nextPage];
+  // Prepare: show next page behind
+  mPages[nextIdx].style.zIndex=5;
+  mPages[nextIdx].style.opacity='1';
   
-  // Start animation
-  mCurl.style.opacity='1';
-  mFlip.style.transition='transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)';
+  // Prepare flip: front = current page, back = next page
+  mFlipFrontImg.src=IMAGES[mCur+1];
+  mFlipBackImg.src=IMAGES[nextIdx+1];
+  mFlipEl.style.transition='none';
+  mFlipEl.style.transform='rotateY(0deg)';
+  mFlipEl.style.opacity='1';
+  mCurlEl.style.opacity='0';
   
-  // Force reflow then animate
-  void mFlip.offsetWidth;
-  mFlip.style.transform='rotateY(-180deg)';
+  // Force reflow
+  void mFlipEl.offsetWidth;
   
-  // When animation ends: swap seamlessly
+  // Animate
+  mCurlEl.style.opacity='1';
+  mFlipEl.style.transition='transform 0.55s cubic-bezier(0.22,0.61,0.36,1)';
+  mFlipEl.style.transform='rotateY(-180deg)';
+  
+  var done=false;
   var onEnd=function(e){
-    if(e.propertyName!=='transform')return;
-    mFlip.removeEventListener('transitionend',onEnd);
+    if(e.propertyName!=='transform'||done)return;
+    done=true;
+    mFlipEl.removeEventListener('transitionend',onEnd);
     
-    // SEAMLESS SWAP:
-    // 1. Update base image to new page (flip is at -180deg, showing back = new page)
-    mBaseImg.src=IMAGES[mCur+2];
-    mCur++;
-    
-    // 2. Update UI
+    // Swap: flip is at -180deg showing back (next page)
+    // 1. Make next page the visible base page
+    mCur=nextIdx;
+    mShowPage(mCur);
     mUpdateUI();
     
-    // 3. In ONE frame: disable transition, reset flip, update front image
-    //    Since base already shows new page and flip front will show new page too,
-    //    the reset is completely invisible to the user.
-    mFlip.style.transition='none';
-    mFlip.style.transform='rotateY(0deg)';
-    mFlipFrontImg.src=IMAGES[mCur+1];
+    // 2. Hide flip layer instantly (base page already shows correct content)
+    mFlipEl.style.transition='none';
+    mFlipEl.style.opacity='0';
+    mCurlEl.style.opacity='0';
     
-    // Preload next next page for flip back
-    if(mCur+1<TOTAL_PAGES){
-      mFlipBackImg.src=IMAGES[mCur+2];
-    }
-    
-    mCurl.style.opacity='0';
-    
-    // Re-enable transition for next flip
+    // 3. Reset flip position in background (invisible)
     requestAnimationFrame(function(){
-      void mFlip.offsetWidth;
-      mFlip.style.transition='';
+      mFlipEl.style.transform='rotateY(0deg)';
       mBusy=false;
     });
   };
-  mFlip.addEventListener('transitionend',onEnd);
+  mFlipEl.addEventListener('transitionend',onEnd);
 }
 
-// Go to previous page with flip animation
+// Flip to previous page
 function mPrev(){
   if(mBusy||mCur<=0)return;
   mBusy=true;
   
-  var prevPage=mCur; // page before current (1-based)
+  var prevIdx=mCur-1;
   
-  // Prepare: base shows prev page (will be revealed as flip comes back)
-  mBaseImg.src=IMAGES[prevPage];
-  // Flip front shows prev page, flip back shows current page
-  mFlipFrontImg.src=IMAGES[prevPage];
+  // Prepare: prev page becomes base (shown when flip comes back)
+  mPages[prevIdx].style.zIndex=5;
+  mPages[prevIdx].style.opacity='1';
+  // Current page stays on top (z-index 10) but will be flipped away
+  // Actually we need current page on flip back, prev page as base
+  
+  // Flip starts at -180deg (back face = current page visible)
+  // Then animates to 0deg (front face = prev page visible)
+  mFlipFrontImg.src=IMAGES[prevIdx+1];
   mFlipBackImg.src=IMAGES[mCur+1];
   
-  // Start from flipped position
-  mFlip.style.transition='none';
-  mFlip.style.transform='rotateY(-180deg)';
-  mCurl.style.opacity='1';
+  mFlipEl.style.transition='none';
+  mFlipEl.style.transform='rotateY(-180deg)';
+  mFlipEl.style.opacity='1';
+  mCurlEl.style.opacity='1';
   
-  void mFlip.offsetWidth;
+  // Hide current base page since flip covers it
+  mPages[mCur].style.opacity='0';
   
-  // Animate back to 0deg
-  mFlip.style.transition='transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)';
-  mFlip.style.transform='rotateY(0deg)';
+  void mFlipEl.offsetWidth;
   
+  // Animate forward
+  mFlipEl.style.transition='transform 0.55s cubic-bezier(0.22,0.61,0.36,1)';
+  mFlipEl.style.transform='rotateY(0deg)';
+  
+  var done=false;
   var onEnd=function(e){
-    if(e.propertyName!=='transform')return;
-    mFlip.removeEventListener('transitionend',onEnd);
+    if(e.propertyName!=='transform'||done)return;
+    done=true;
+    mFlipEl.removeEventListener('transitionend',onEnd);
     
-    mCur--;
+    // Flip is at 0deg showing front (prev page)
+    // 1. Update state
+    mCur=prevIdx;
+    mShowPage(mCur);
     mUpdateUI();
     
-    // Flip is at 0deg showing front = prev page. Base also shows prev page.
-    // Update flip back to show current page (for next forward flip)
-    mFlip.style.transition='none';
-    if(mCur+1<TOTAL_PAGES){
-      mFlipBackImg.src=IMAGES[mCur+2];
-    }
-    mCurl.style.opacity='0';
+    // 2. Hide flip instantly
+    mFlipEl.style.transition='none';
+    mFlipEl.style.opacity='0';
+    mCurlEl.style.opacity='0';
     
     requestAnimationFrame(function(){
-      void mFlip.offsetWidth;
-      mFlip.style.transition='';
+      mFlipEl.style.transform='rotateY(0deg)';
       mBusy=false;
     });
   };
-  mFlip.addEventListener('transitionend',onEnd);
+  mFlipEl.addEventListener('transitionend',onEnd);
 }
 
 // ====== Touch handling ======
 var touch={
   mode:'idle', startX:0, startY:0, lastX:0, lastY:0,
-  moved:false, startTime:0, dir:0, // 1=next candidate, -1=prev candidate
-  startPage:0
+  moved:false, startTime:0, dir:0
 };
 
 mStage.addEventListener('touchstart',function(e){
@@ -491,13 +552,8 @@ mStage.addEventListener('touchstart',function(e){
     touch.startTime=Date.now();
     touch.moved=false;
     touch.dir=0;
-    touch.startPage=mCur;
     touch.mode='drag';
-    
-    // Disable transition for finger-follow
-    mFlip.style.transition='none';
   }else if(t.length===2){
-    // Pinch -> open zoom
     e.preventDefault();
     touch.mode='pinch';
     openZoom(mCur+1);
@@ -514,7 +570,6 @@ mStage.addEventListener('touchmove',function(e){
     
     if(Math.abs(dx)>6)touch.moved=true;
     
-    // Only handle if horizontal is dominant
     if(Math.abs(dx)>Math.abs(dy)*1.2){
       e.preventDefault();
       
@@ -522,43 +577,53 @@ mStage.addEventListener('touchmove',function(e){
       var progress=Math.max(-1,Math.min(1,dx/w));
       
       if(progress<0){
-        // Swipe left = next page
-        if(mCur>=TOTAL_PAGES-1){
-          // Bounce effect for last page
-          var bounce=progress*0.2;
-          mFlip.style.transform='rotateY('+bounce*180+'deg)';
-          mCurl.style.opacity=Math.min(0.3,Math.abs(progress)*0.5);
-          return;
-        }
+        // Next page direction
+        if(mCur>=TOTAL_PAGES-1)return;
         touch.dir=1;
-        // Prepare flip back with next page content
-        if(mFlipBackImg.getAttribute('data-page')!==mCur+2){
-          mFlipBackImg.src=IMAGES[mCur+2];
-          mFlipBackImg.setAttribute('data-page',mCur+2);
+        
+        var nextIdx=mCur+1;
+        // Show next page behind
+        mPages[nextIdx].style.opacity='1';
+        mPages[nextIdx].style.zIndex=5;
+        
+        // Prepare flip if not already
+        if(mFlipEl.style.opacity!=='1'){
+          mFlipFrontImg.src=IMAGES[mCur+1];
+          mFlipBackImg.src=IMAGES[nextIdx+1];
+          mFlipEl.style.transition='none';
+          mFlipEl.style.transform='rotateY(0deg)';
+          mFlipEl.style.opacity='1';
+          void mFlipEl.offsetWidth;
         }
-        var angle=progress*180; // 0 to -180
-        mFlip.style.transform='rotateY('+angle+'deg)';
-        mCurl.style.opacity=Math.min(1,Math.abs(progress)*1.5);
+        
+        var angle=progress*180;
+        mFlipEl.style.transform='rotateY('+angle+'deg)';
+        mCurlEl.style.opacity=Math.min(1,Math.abs(progress)*1.5);
       }else{
-        // Swipe right = prev page
-        if(mCur<=0){
-          var bounce2=progress*0.2;
-          mFlip.style.transform='rotateY('+bounce2*180+'deg)';
-          mCurl.style.opacity=Math.min(0.3,progress*0.5);
-          return;
-        }
+        // Prev page direction
+        if(mCur<=0)return;
         touch.dir=-1;
-        // For prev: base shows prev, flip starts at -180 and comes to 0
-        // Update base to prev page
-        mBaseImg.src=IMAGES[mCur];
-        // Flip front = prev page (shown when flip is at 0)
-        mFlipFrontImg.src=IMAGES[mCur];
-        // Flip back = current page (shown when flip is at -180)
-        mFlipBackImg.src=IMAGES[mCur+1];
-        // Start from -180deg
-        var angle2=-180+progress*180; // -180 to 0
-        mFlip.style.transform='rotateY('+angle2+'deg)';
-        mCurl.style.opacity=Math.min(1,(1-progress)*1.5);
+        
+        var prevIdx=mCur-1;
+        // Show prev page behind as base
+        mPages[prevIdx].style.opacity='1';
+        mPages[prevIdx].style.zIndex=5;
+        // Hide current base page
+        mPages[mCur].style.opacity='0';
+        
+        // Flip starts at -180deg
+        if(mFlipEl.style.opacity!=='1'){
+          mFlipFrontImg.src=IMAGES[prevIdx+1];
+          mFlipBackImg.src=IMAGES[mCur+1];
+          mFlipEl.style.transition='none';
+          mFlipEl.style.transform='rotateY(-180deg)';
+          mFlipEl.style.opacity='1';
+          void mFlipEl.offsetWidth;
+        }
+        
+        var angle2=-180+progress*180;
+        mFlipEl.style.transform='rotateY('+angle2+'deg)';
+        mCurlEl.style.opacity=Math.min(1,(1-progress)*1.5);
       }
     }
     touch.lastX=t[0].clientX;
@@ -575,65 +640,65 @@ mStage.addEventListener('touchend',function(e){
     var dt=Date.now()-touch.startTime;
     
     if(Math.abs(dx)>Math.abs(dy)*1.2){
-      // Velocity check: fast flick = flip
-      var velocity=dx/dt; // px per ms
-      var fastFlick=Math.abs(velocity)>0.3;
-      var farEnough=Math.abs(dx)>window.innerWidth*0.25;
+      var velocity=dx/dt;
+      var fast=Math.abs(velocity)>0.3;
+      var far=Math.abs(dx)>window.innerWidth*0.25;
       
-      if((fastFlick||farEnough)&&touch.dir===1&&mCur<TOTAL_PAGES-1){
+      if((fast||far)&&touch.dir===1&&mCur<TOTAL_PAGES-1){
         // Complete next flip
-        mFlip.style.transition='transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
-        mFlip.style.transform='rotateY(-180deg)';
-        mCurl.style.opacity='1';
+        mFlipEl.style.transition='transform 0.35s cubic-bezier(0.22,0.61,0.36,1)';
+        mFlipEl.style.transform='rotateY(-180deg)';
+        mCurlEl.style.opacity='1';
         mBusy=true;
         
+        var nextIdx=mCur+1;
+        var done=false;
         var onEnd=function(ev){
-          if(ev.propertyName!=='transform')return;
-          mFlip.removeEventListener('transitionend',onEnd);
-          mBaseImg.src=IMAGES[mCur+2];
-          mCur++;
+          if(ev.propertyName!=='transform'||done)return;
+          done=true;
+          mFlipEl.removeEventListener('transitionend',onEnd);
+          mCur=nextIdx;
+          mShowPage(mCur);
           mUpdateUI();
-          mFlip.style.transition='none';
-          mFlip.style.transform='rotateY(0deg)';
-          mFlipFrontImg.src=IMAGES[mCur+1];
-          if(mCur+1<TOTAL_PAGES)mFlipBackImg.src=IMAGES[mCur+2];
-          mCurl.style.opacity='0';
+          mFlipEl.style.transition='none';
+          mFlipEl.style.opacity='0';
+          mCurlEl.style.opacity='0';
           requestAnimationFrame(function(){
-            void mFlip.offsetWidth;
-            mFlip.style.transition='';
+            mFlipEl.style.transform='rotateY(0deg)';
             mBusy=false;
           });
         };
-        mFlip.addEventListener('transitionend',onEnd);
+        mFlipEl.addEventListener('transitionend',onEnd);
         
-      }else if((fastFlick||farEnough)&&touch.dir===-1&&mCur>0){
+      }else if((fast||far)&&touch.dir===-1&&mCur>0){
         // Complete prev flip
-        mFlip.style.transition='transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
-        mFlip.style.transform='rotateY(0deg)';
-        
+        mFlipEl.style.transition='transform 0.35s cubic-bezier(0.22,0.61,0.36,1)';
+        mFlipEl.style.transform='rotateY(0deg)';
         mBusy=true;
+        
+        var prevIdx=mCur-1;
+        var done2=false;
         var onEnd2=function(ev){
-          if(ev.propertyName!=='transform')return;
-          mFlip.removeEventListener('transitionend',onEnd2);
-          mCur--;
+          if(ev.propertyName!=='transform'||done2)return;
+          done2=true;
+          mFlipEl.removeEventListener('transitionend',onEnd2);
+          mCur=prevIdx;
+          mShowPage(mCur);
           mUpdateUI();
-          mFlip.style.transition='none';
-          if(mCur+1<TOTAL_PAGES)mFlipBackImg.src=IMAGES[mCur+2];
-          mCurl.style.opacity='0';
+          mFlipEl.style.transition='none';
+          mFlipEl.style.opacity='0';
+          mCurlEl.style.opacity='0';
           requestAnimationFrame(function(){
-            void mFlip.offsetWidth;
-            mFlip.style.transition='';
+            mFlipEl.style.transform='rotateY(0deg)';
             mBusy=false;
           });
         };
-        mFlip.addEventListener('transitionend',onEnd2);
+        mFlipEl.addEventListener('transitionend',onEnd2);
         
       }else{
-        // Snap back
         mSnapBack(touch.dir);
       }
     }else{
-      // Vertical or minimal swipe - reset
       mSnapBack(0);
     }
   }
@@ -642,25 +707,35 @@ mStage.addEventListener('touchend',function(e){
 },{passive:true});
 
 function mSnapBack(dir){
-  mFlip.style.transition='transform 0.3s ease-out';
+  if(mFlipEl.style.opacity!=='1')return;
+  
+  mFlipEl.style.transition='transform 0.25s ease-out';
+  
   if(dir===1){
     // Was going next, snap back to 0deg
-    mFlip.style.transform='rotateY(0deg)';
+    mFlipEl.style.transform='rotateY(0deg)';
+    setTimeout(function(){
+      mFlipEl.style.transition='none';
+      mFlipEl.style.opacity='0';
+      mCurlEl.style.opacity='0';
+      // Reset page visibility
+      mShowPage(mCur);
+    },260);
   }else if(dir===-1){
     // Was going prev, snap back to -180 then reset
-    mFlip.style.transform='rotateY(-180deg)';
+    mFlipEl.style.transform='rotateY(-180deg)';
     setTimeout(function(){
-      mFlip.style.transition='none';
-      mFlip.style.transform='rotateY(0deg)';
-      // Restore base to current page
-      mBaseImg.src=IMAGES[mCur+1];
-      mFlipFrontImg.src=IMAGES[mCur+1];
-      if(mCur+1<TOTAL_PAGES)mFlipBackImg.src=IMAGES[mCur+2];
-      void mFlip.offsetWidth;
-      mFlip.style.transition='';
-    },310);
+      mFlipEl.style.transition='none';
+      mFlipEl.style.opacity='0';
+      mFlipEl.style.transform='rotateY(0deg)';
+      mCurlEl.style.opacity='0';
+      mShowPage(mCur);
+    },260);
+  }else{
+    mFlipEl.style.opacity='0';
+    mCurlEl.style.opacity='0';
+    mShowPage(mCur);
   }
-  mCurl.style.opacity='0';
 }
 
 // Double-tap to zoom
@@ -694,7 +769,10 @@ window.addEventListener('resize',function(){
       if(isMobile){
         document.getElementById('book-container').style.display='none';
         document.getElementById('mobile-reader').style.display='block';
-        if(!mBaseImg){mBuild();mCur=Math.min(currentLeaf,TOTAL_PAGES-1);mBaseImg.src=IMAGES[mCur+1];mFlipFrontImg.src=IMAGES[mCur+1];if(mCur+1<TOTAL_PAGES)mFlipBackImg.src=IMAGES[mCur+2];mUpdateUI();}
+        if(mPages.length===0){
+          mBuild();mCur=Math.min(currentLeaf,TOTAL_PAGES-1);
+          mShowPage(mCur);mUpdateUI();
+        }
       }else{
         document.getElementById('book-container').style.display='block';
         document.getElementById('mobile-reader').style.display='none';
@@ -708,13 +786,13 @@ window.addEventListener('resize',function(){
 document.addEventListener('gesturestart',function(e){e.preventDefault();},{passive:false});
 
 // Init
-if(isMobile){mBuild();mCur=0;mUpdateUI();}
+if(isMobile){mBuild();mCur=0;mShowPage(0);mUpdateUI();}
 else{buildBook();updateZIndex();updateUI();}
 
 setTimeout(function(){
   loadingEl.classList.add('hidden');
   setTimeout(function(){loadingEl.remove();},500);
-},500);
+},800);
 </script>
 </body>
 </html>
