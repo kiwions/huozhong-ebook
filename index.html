@@ -25,23 +25,30 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 .click-zone{position:fixed;top:0;height:100%;width:12%;z-index:200;cursor:pointer;opacity:0}
 .click-zone.left{left:0}.click-zone.right{right:0}
 
-/* ====== MOBILE: Realistic page flip with sharp images ====== */
+/* ====== MOBILE: Realistic page flip ====== */
 #mobile-reader{display:none;position:fixed;inset:0;z-index:500;overflow:hidden;background:#0d0d0d}
 #m-stage{position:relative;width:100%;height:100%;perspective:1500px;perspective-origin:center center;overflow:hidden;touch-action:none}
-.m-page-layer{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.m-page-wrap{position:relative;transform-style:preserve-3d;will-change:transform;transform-origin:center center}
-.m-page-wrap img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;-webkit-user-drag:none;user-select:none}
-.m-flip-page{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;transform-style:preserve-3d;transform-origin:left center;will-change:transform;backface-visibility:visible;-webkit-backface-visibility:visible}
-.m-flip-front{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
-.m-flip-back{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden;transform:rotateY(180deg);overflow:hidden}
-.m-flip-front img,.m-flip-back img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
-.m-curl-shadow{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;opacity:0}
-.m-curl-shadow::before{content:'';position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(to right,rgba(0,0,0,0) 0%,rgba(0,0,0,0.02) 30%,rgba(0,0,0,0.08) 60%,rgba(0,0,0,0.18) 85%,rgba(0,0,0,0.28) 100%)}
-.m-curl-shadow::after{content:'';position:absolute;top:0;right:0;width:40%;height:100%;background:linear-gradient(to left,rgba(255,255,255,0) 0%,rgba(255,255,255,0.03) 40%,rgba(255,255,255,0.08) 70%,rgba(255,255,255,0.12) 100%)}
-.m-page-edge{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;box-shadow:inset -2px 0 8px -2px rgba(0,0,0,0.15)}
+
+/* Two-page structure: base page (always visible) + flip page (animates on top) */
+.m-base{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;z-index:2}
+.m-base img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;-webkit-user-drag:none;user-select:none;display:block}
+
+.m-flip{position:absolute;inset:0;z-index:5;transform-style:preserve-3d;transform-origin:left center;will-change:transform}
+.m-flip-front, .m-flip-back{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.m-flip-front img, .m-flip-back img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;-webkit-user-drag:none;user-select:none;display:block}
+.m-flip-back{transform:rotateY(180deg)}
+
+/* Curl shadow on flip front */
+.m-curl{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 0.05s linear}
+.m-curl::before{content:'';position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0) 55%,rgba(0,0,0,0.06) 75%,rgba(0,0,0,0.2) 92%,rgba(0,0,0,0.3) 100%)}
+.m-curl::after{content:'';position:absolute;top:0;right:0;bottom:0;width:35%;background:linear-gradient(to left,rgba(255,255,255,0) 0%,rgba(255,255,255,0.05) 40%,rgba(255,255,255,0.1) 70%,rgba(255,255,255,0.14) 100%)}
+
+/* Page edge */
+.m-edge{position:absolute;inset:0;pointer-events:none;box-shadow:inset -2px 0 8px -2px rgba(0,0,0,0.15)}
+
 .m-book-shadow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:80%;height:20px;background:radial-gradient(ellipse,rgba(0,0,0,0.4) 0%,transparent 70%);z-index:0;pointer-events:none}
 
-/* ====== Zoom Overlay (desktop + mobile detail view) ====== */
+/* ====== ZOOM OVERLAY ====== */
 #zoom-overlay{position:fixed;inset:0;z-index:5000;display:none;background:rgba(0,0,0,0.92);overflow:hidden;touch-action:none}
 #zoom-overlay.active{display:block}
 #zoom-container{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);will-change:transform}
@@ -107,7 +114,7 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 <div id="page-indicator">封面</div>
 <div id="progress-bar"></div>
 
-<!-- Zoom overlay (shared) -->
+<!-- Zoom overlay -->
 <div id="zoom-overlay">
   <div id="zoom-reset" title="重置大小">1:1</div>
   <div id="zoom-close">&#10005;</div>
@@ -151,7 +158,7 @@ var IMAGES={
 };
 
 var TOTAL_PAGES=31,TOTAL_LEAVES=15;
-var currentLeaf=0,currentPage=0;
+var currentLeaf=0;
 var isMobile=window.innerWidth<=660;
 var book=document.getElementById('book');
 var prevBtn=document.getElementById('prev-btn'),nextBtn=document.getElementById('next-btn');
@@ -159,7 +166,7 @@ var pageIndicator=document.getElementById('page-indicator'),progressBar=document
 var loadingEl=document.getElementById('loading');
 var chapterMap={1:'封面',2:'目录',3:'目录',4:'第一章·立土',5:'第一章·立土',6:'第一章·立土',7:'第一章·立土',8:'第一章·立土',9:'第一章·立土',10:'第二章·盛土',11:'第二章·盛土',12:'第二章·盛土',13:'第二章·盛土',14:'第二章·盛土',15:'第三章·折土',16:'第三章·折土',17:'第三章·折土',18:'第三章·折土',19:'第三章·折土',20:'第四章·守土',21:'第四章·守土',22:'第四章·守土',23:'第四章·守土',24:'第四章·守土',25:'第五章·生土',26:'第五章·生土',27:'第五章·生土',28:'第五章·生土',29:'第五章·生土',30:'第六章·归根',31:'第六章·归根'};
 
-// ====== DESKTOP: 3D flip book ======
+// ====== DESKTOP ======
 function buildBook(){
   book.innerHTML='';
   for(var i=0;i<TOTAL_LEAVES;i++){
@@ -190,15 +197,12 @@ function updateUI(){
   progressBar.style.width=(currentLeaf/TOTAL_LEAVES*100)+'%';
   prevBtn.disabled=currentLeaf===0;nextBtn.disabled=currentLeaf>=TOTAL_LEAVES;
 }
-
-// Desktop: double-click to zoom
 document.getElementById('book-container').addEventListener('dblclick', function(e) {
   var page = e.target.closest('.page, .right-page');
   if (!page) return;
   var pageNum = parseInt(page.getAttribute('data-page') || '1', 10);
   openZoom(pageNum);
 });
-
 if(!isMobile){
   nextBtn.onclick=flipNext;prevBtn.onclick=flipPrev;
   document.getElementById('click-right').onclick=flipNext;
@@ -227,7 +231,7 @@ document.addEventListener('wheel',function(e){
   wl=true;setTimeout(function(){wl=false;},500);
 },{passive:true});
 
-// ====== ZOOM OVERLAY (shared for desktop + mobile) ======
+// ====== ZOOM OVERLAY ======
 var zoomOverlay=document.getElementById('zoom-overlay');
 var zoomContainer=document.getElementById('zoom-container');
 var zoomImg=document.getElementById('zoom-img');
@@ -235,8 +239,7 @@ var zoomClose=document.getElementById('zoom-close');
 var zoomReset=document.getElementById('zoom-reset');
 var zScale=1,zX=0,zY=0;
 var zDragging=false,zDragStartX=0,zDragStartY=0;
-var zInitDist=0,zInitScale=1;
-var zInitX=0,zInitY=0;
+var zInitDist=0,zInitScale=1,zInitX=0,zInitY=0;
 
 function applyZoomTransform(){
   zoomContainer.style.transform='translate(-50%,-50%) translate('+zX+'px,'+zY+'px) scale('+zScale+')';
@@ -244,15 +247,12 @@ function applyZoomTransform(){
 function openZoom(pageNum){
   zoomImg.src=IMAGES[pageNum]||'';
   zoomOverlay.classList.add('active');
-  // Reset position
   zScale=1;zX=0;zY=0;
-  // Wait for image to render, then fit to screen
   requestAnimationFrame(function(){
     var rect=zoomImg.getBoundingClientRect();
     var vw=window.innerWidth,vh=window.innerHeight;
-    if(rect.width>vw*0.9||rect.height>vh*0.9){
-      var scale=Math.min((vw*0.9)/rect.width,(vh*0.9)/rect.height);
-      zScale=scale;
+    if(rect.width>vw*0.92||rect.height>vh*0.88){
+      zScale=Math.min((vw*0.92)/rect.width,(vh*0.88)/rect.height);
     }
     applyZoomTransform();
   });
@@ -261,14 +261,10 @@ function closeZoom(){zoomOverlay.classList.remove('active');}
 zoomClose.onclick=closeZoom;
 zoomReset.onclick=function(){zScale=1;zX=0;zY=0;applyZoomTransform();};
 zoomOverlay.addEventListener('click',function(e){if(e.target===zoomOverlay)closeZoom();});
-
-// Mouse drag
 zoomOverlay.addEventListener('mousedown',function(e){
   if(e.target===zoomClose||e.target===zoomReset)return;
-  zDragging=true;
-  zDragStartX=e.clientX-zX;zDragStartY=e.clientY-zY;
-  zoomContainer.classList.add('dragging');
-  e.preventDefault();
+  zDragging=true;zDragStartX=e.clientX-zX;zDragStartY=e.clientY-zY;
+  zoomContainer.classList.add('dragging');e.preventDefault();
 });
 document.addEventListener('mousemove',function(e){
   if(zDragging){zX=e.clientX-zDragStartX;zY=e.clientY-zDragStartY;applyZoomTransform();}
@@ -276,29 +272,20 @@ document.addEventListener('mousemove',function(e){
 document.addEventListener('mouseup',function(){
   if(zDragging){zDragging=false;zoomContainer.classList.remove('dragging');}
 });
-
-// Mouse wheel zoom
 zoomOverlay.addEventListener('wheel',function(e){
   e.preventDefault();
   var delta=e.deltaY>0?0.9:1.1;
   var newScale=Math.max(0.2,Math.min(15,zScale*delta));
-  // Zoom toward cursor
   var rect=zoomOverlay.getBoundingClientRect();
   var cx=e.clientX-rect.left-rect.width/2;
   var cy=e.clientY-rect.top-rect.height/2;
   var ratio=newScale/zScale;
-  zX=cx-ratio*(cx-zX);
-  zY=cy-ratio*(cy-zY);
-  zScale=newScale;
-  applyZoomTransform();
+  zX=cx-ratio*(cx-zX);zY=cy-ratio*(cy-zY);
+  zScale=newScale;applyZoomTransform();
 },{passive:false});
-
-// Touch gestures in zoom overlay
 zoomOverlay.addEventListener('touchstart',function(e){
   if(e.touches.length===1){
-    zDragging=true;
-    zDragStartX=e.touches[0].clientX-zX;
-    zDragStartY=e.touches[0].clientY-zY;
+    zDragging=true;zDragStartX=e.touches[0].clientX-zX;zDragStartY=e.touches[0].clientY-zY;
     zoomContainer.classList.add('dragging');
   }else if(e.touches.length===2){
     zDragging=false;
@@ -311,380 +298,392 @@ zoomOverlay.addEventListener('touchstart',function(e){
 zoomOverlay.addEventListener('touchmove',function(e){
   e.preventDefault();
   if(e.touches.length===1&&zDragging){
-    zX=e.touches[0].clientX-zDragStartX;
-    zY=e.touches[0].clientY-zDragStartY;
+    zX=e.touches[0].clientX-zDragStartX;zY=e.touches[0].clientY-zDragStartY;
     applyZoomTransform();
   }else if(e.touches.length===2&&zInitDist>0){
     var dx=e.touches[0].clientX-e.touches[1].clientX;
     var dy=e.touches[0].clientY-e.touches[1].clientY;
     var dist=Math.sqrt(dx*dx+dy*dy);
     zScale=Math.max(0.2,Math.min(10,zInitScale*(dist/zInitDist)));
-    zX=zInitX;zY=zInitY;
-    applyZoomTransform();
+    zX=zInitX;zY=zInitY;applyZoomTransform();
   }
 },{passive:false});
 zoomOverlay.addEventListener('touchend',function(e){
   if(e.touches.length===0){zDragging=false;zoomContainer.classList.remove('dragging');zInitDist=0;}
 },{passive:true});
 
-// ====== MOBILE: Realistic flip with sharp images ======
+// ====== MOBILE: SEAMLESS FLIP ======
 var mStage=document.getElementById('m-stage');
-var mCurrentPage=0;
-var mAnimating=false;
+var mCur=0;      // current page index (0-based)
+var mBusy=false;
+var mBaseImg=null;
+var mFlip=null;
+var mFlipFrontImg=null;
+var mFlipBackImg=null;
+var mCurl=null;
 
-function buildMobile(){
+function mBuild(){
   mStage.innerHTML='<div class="m-book-shadow"></div>';
   
-  // Current page (static base layer)
-  var currentLayer=document.createElement('div');
-  currentLayer.className='m-page-layer';
-  currentLayer.id='m-current';
-  currentLayer.style.zIndex=2;
-  var cWrap=document.createElement('div');
-  cWrap.className='m-page-wrap';
-  cWrap.id='m-current-wrap';
-  var cImg=document.createElement('img');
-  cImg.src=IMAGES[1];cImg.alt='';cImg.id='m-current-img';
-  cWrap.appendChild(cImg);
+  // Base layer - the page currently shown (always visible, never animates)
+  var base=document.createElement('div');
+  base.className='m-base';
+  mBaseImg=document.createElement('img');
+  mBaseImg.src=IMAGES[1];mBaseImg.alt='';
+  base.appendChild(mBaseImg);
   var edge=document.createElement('div');
-  edge.className='m-page-edge';
-  cWrap.appendChild(edge);
-  currentLayer.appendChild(cWrap);
-  mStage.appendChild(currentLayer);
-
-  // Next page layer (behind, for flip reveal)
-  var nextLayer=document.createElement('div');
-  nextLayer.className='m-page-layer';
-  nextLayer.id='m-next';
-  nextLayer.style.zIndex=1;
-  nextLayer.style.opacity='0';
-  var nWrap=document.createElement('div');
-  nWrap.className='m-page-wrap';
-  var nImg=document.createElement('img');
-  nImg.src=IMAGES[2];nImg.alt='';nImg.id='m-next-img';
-  nWrap.appendChild(nImg);
-  nextLayer.appendChild(nWrap);
-  mStage.appendChild(nextLayer);
-
-  // Flip page (animates on top)
-  var flipPage=document.createElement('div');
-  flipPage.className='m-flip-page';
-  flipPage.id='m-flip';
-  flipPage.style.zIndex=5;
-  flipPage.style.transform='rotateY(0deg)';
+  edge.className='m-edge';
+  base.appendChild(edge);
+  mStage.appendChild(base);
   
-  var flipFront=document.createElement('div');
-  flipFront.className='m-flip-front';
-  var ffImg=document.createElement('img');
-  ffImg.src=IMAGES[1];ffImg.alt='';ffImg.id='m-flip-front-img';
-  flipFront.appendChild(ffImg);
-  var curlShadow=document.createElement('div');
-  curlShadow.className='m-curl-shadow';
-  curlShadow.id='m-curl-shadow';
-  flipFront.appendChild(curlShadow);
+  // Flip layer - animates on top of base
+  mFlip=document.createElement('div');
+  mFlip.className='m-flip';
+  mFlip.style.transform='rotateY(0deg)';
   
-  var flipBack=document.createElement('div');
-  flipBack.className='m-flip-back';
-  var fbImg=document.createElement('img');
-  fbImg.src=IMAGES[2];fbImg.alt='';fbImg.id='m-flip-back-img';
-  flipBack.appendChild(fbImg);
-  var backShadow=document.createElement('div');
-  backShadow.className='m-curl-shadow';
-  backShadow.style.transform='scaleX(-1)';
-  flipBack.appendChild(backShadow);
+  var front=document.createElement('div');
+  front.className='m-flip-front';
+  mFlipFrontImg=document.createElement('img');
+  mFlipFrontImg.src=IMAGES[1];mFlipFrontImg.alt='';
+  front.appendChild(mFlipFrontImg);
+  mCurl=document.createElement('div');
+  mCurl.className='m-curl';
+  front.appendChild(mCurl);
+  mFlip.appendChild(front);
   
-  flipPage.appendChild(flipFront);
-  flipPage.appendChild(flipBack);
-  mStage.appendChild(flipPage);
+  var back=document.createElement('div');
+  back.className='m-flip-back';
+  mFlipBackImg=document.createElement('img');
+  mFlipBackImg.src=IMAGES[2];mFlipBackImg.alt='';
+  back.appendChild(mFlipBackImg);
+  var backCurl=document.createElement('div');
+  backCurl.className='m-curl';
+  backCurl.style.transform='scaleX(-1)';
+  back.appendChild(backCurl);
+  mFlip.appendChild(back);
+  
+  mStage.appendChild(mFlip);
 }
 
-function mSetPage(pageNum){
-  mCurrentPage=pageNum;
-  var pn=pageNum+1;
-  var curImg=document.getElementById('m-current-img');
-  if(curImg)curImg.src=IMAGES[pn];
-  var flipFront=document.getElementById('m-flip-front-img');
-  if(flipFront)flipFront.src=IMAGES[pn];
-  var nextImg=document.getElementById('m-next-img');
-  var flipBack=document.getElementById('m-flip-back-img');
-  if(pn<TOTAL_PAGES){
-    if(nextImg)nextImg.src=IMAGES[pn+1];
-    if(flipBack)flipBack.src=IMAGES[pn+1];
-  }
+function mUpdateUI(){
+  var pn=mCur+1;
   pageIndicator.textContent=chapterMap[pn]+' · 第'+pn+'页 / 共'+TOTAL_PAGES+'页';
   progressBar.style.width=(pn/TOTAL_PAGES*100)+'%';
 }
 
-function mFlipNext(){
-  if(mAnimating||mCurrentPage>=TOTAL_PAGES-1)return;
-  mAnimating=true;
+// Go to next page with flip animation
+function mNext(){
+  if(mBusy||mCur>=TOTAL_PAGES-1)return;
+  mBusy=true;
   
-  var flip=document.getElementById('m-flip');
-  var curl=document.getElementById('m-curl-shadow');
-  var nextLayer=document.getElementById('m-next');
-  var nextImg=document.getElementById('m-next-img');
-  var flipBack=document.getElementById('m-flip-back-img');
-  var curImg=document.getElementById('m-current-img');
+  var nextPage=mCur+2; // page after current (1-based)
+  if(nextPage>TOTAL_PAGES)nextPage=TOTAL_PAGES;
   
-  // Prepare: next layer shows next page
-  var nextPageNum=mCurrentPage+2;
-  nextImg.src=IMAGES[nextPageNum]||IMAGES[TOTAL_PAGES];
-  flipBack.src=IMAGES[mCurrentPage+2]||IMAGES[TOTAL_PAGES];
-  nextLayer.style.opacity='1';
+  // Prepare: flip back shows next page
+  mFlipBackImg.src=IMAGES[nextPage];
   
-  curl.style.opacity='1';
-  flip.style.transition='transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)';
-  flip.style.transform='rotateY(-180deg)';
+  // Start animation
+  mCurl.style.opacity='1';
+  mFlip.style.transition='transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)';
   
-  // At animation end: update current layer FIRST, then hide flip instantly
-  var onEnd=function(){
-    flip.removeEventListener('transitionend',onEnd);
+  // Force reflow then animate
+  void mFlip.offsetWidth;
+  mFlip.style.transform='rotateY(-180deg)';
+  
+  // When animation ends: swap seamlessly
+  var onEnd=function(e){
+    if(e.propertyName!=='transform')return;
+    mFlip.removeEventListener('transitionend',onEnd);
     
-    // 1. Update current page image to the new page
-    curImg.src=IMAGES[mCurrentPage+2];
-    mCurrentPage++;
+    // SEAMLESS SWAP:
+    // 1. Update base image to new page (flip is at -180deg, showing back = new page)
+    mBaseImg.src=IMAGES[mCur+2];
+    mCur++;
     
     // 2. Update UI
-    var pn=mCurrentPage+1;
-    pageIndicator.textContent=chapterMap[pn]+' · 第'+pn+'页 / 共'+TOTAL_PAGES+'页';
-    progressBar.style.width=(pn/TOTAL_PAGES*100)+'%';
+    mUpdateUI();
     
-    // 3. Hide flip layer instantly (user sees current layer which is already new page)
-    flip.style.transition='none';
-    flip.style.opacity='0';
+    // 3. In ONE frame: disable transition, reset flip, update front image
+    //    Since base already shows new page and flip front will show new page too,
+    //    the reset is completely invisible to the user.
+    mFlip.style.transition='none';
+    mFlip.style.transform='rotateY(0deg)';
+    mFlipFrontImg.src=IMAGES[mCur+1];
     
-    // 4. Reset flip in background (invisible to user)
+    // Preload next next page for flip back
+    if(mCur+1<TOTAL_PAGES){
+      mFlipBackImg.src=IMAGES[mCur+2];
+    }
+    
+    mCurl.style.opacity='0';
+    
+    // Re-enable transition for next flip
     requestAnimationFrame(function(){
-      flip.style.transform='rotateY(0deg)';
-      curl.style.opacity='0';
-      nextLayer.style.opacity='0';
-      
-      // Update flip front to new current page, flip back to next next page
-      var flipFront=document.getElementById('m-flip-front-img');
-      flipFront.src=IMAGES[pn];
-      var fb=document.getElementById('m-flip-back-img');
-      if(pn<TOTAL_PAGES)fb.src=IMAGES[pn+1];
-      
-      // 5. Show flip again
-      requestAnimationFrame(function(){
-        flip.style.opacity='1';
-        mAnimating=false;
-      });
+      void mFlip.offsetWidth;
+      mFlip.style.transition='';
+      mBusy=false;
     });
   };
-  flip.addEventListener('transitionend',onEnd);
+  mFlip.addEventListener('transitionend',onEnd);
 }
 
-function mFlipPrev(){
-  if(mAnimating||mCurrentPage<=0)return;
-  mAnimating=true;
+// Go to previous page with flip animation
+function mPrev(){
+  if(mBusy||mCur<=0)return;
+  mBusy=true;
   
-  var flip=document.getElementById('m-flip');
-  var curl=document.getElementById('m-curl-shadow');
-  var nextLayer=document.getElementById('m-next');
-  var nextImg=document.getElementById('m-next-img');
-  var flipFront=document.getElementById('m-flip-front-img');
-  var flipBack=document.getElementById('m-flip-back-img');
-  var curImg=document.getElementById('m-current-img');
+  var prevPage=mCur; // page before current (1-based)
   
-  var newPageNum=mCurrentPage-1;
-  
-  // Prepare: current layer will show new page (previous)
-  // next layer shows old current page
-  curImg.src=IMAGES[newPageNum+1];
-  nextImg.src=IMAGES[mCurrentPage+1];
-  flipFront.src=IMAGES[newPageNum+1];
-  flipBack.src=IMAGES[mCurrentPage+1];
-  nextLayer.style.opacity='1';
+  // Prepare: base shows prev page (will be revealed as flip comes back)
+  mBaseImg.src=IMAGES[prevPage];
+  // Flip front shows prev page, flip back shows current page
+  mFlipFrontImg.src=IMAGES[prevPage];
+  mFlipBackImg.src=IMAGES[mCur+1];
   
   // Start from flipped position
-  flip.style.transition='none';
-  flip.style.transform='rotateY(-180deg)';
-  curl.style.opacity='1';
+  mFlip.style.transition='none';
+  mFlip.style.transform='rotateY(-180deg)';
+  mCurl.style.opacity='1';
   
-  void flip.offsetWidth;
+  void mFlip.offsetWidth;
   
-  flip.style.transition='transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)';
-  flip.style.transform='rotateY(0deg)';
+  // Animate back to 0deg
+  mFlip.style.transition='transform 0.55s cubic-bezier(0.25,0.46,0.45,0.94)';
+  mFlip.style.transform='rotateY(0deg)';
   
-  var onEnd=function(){
-    flip.removeEventListener('transitionend',onEnd);
+  var onEnd=function(e){
+    if(e.propertyName!=='transform')return;
+    mFlip.removeEventListener('transitionend',onEnd);
     
-    mCurrentPage=newPageNum;
-    var pn=mCurrentPage+1;
-    pageIndicator.textContent=chapterMap[pn]+' · 第'+pn+'页 / 共'+TOTAL_PAGES+'页';
-    progressBar.style.width=(pn/TOTAL_PAGES*100)+'%';
+    mCur--;
+    mUpdateUI();
     
-    // Hide flip instantly
-    flip.style.transition='none';
-    flip.style.opacity='0';
+    // Flip is at 0deg showing front = prev page. Base also shows prev page.
+    // Update flip back to show current page (for next forward flip)
+    mFlip.style.transition='none';
+    if(mCur+1<TOTAL_PAGES){
+      mFlipBackImg.src=IMAGES[mCur+2];
+    }
+    mCurl.style.opacity='0';
     
     requestAnimationFrame(function(){
-      curl.style.opacity='0';
-      nextLayer.style.opacity='0';
-      
-      // Update flip front and back
-      flipFront.src=IMAGES[pn];
-      if(pn<TOTAL_PAGES)flipBack.src=IMAGES[pn+1];
-      nextImg.src=IMAGES[pn+1]||IMAGES[TOTAL_PAGES];
-      
-      requestAnimationFrame(function(){
-        flip.style.opacity='1';
-        mAnimating=false;
-      });
+      void mFlip.offsetWidth;
+      mFlip.style.transition='';
+      mBusy=false;
     });
   };
-  flip.addEventListener('transitionend',onEnd);
+  mFlip.addEventListener('transitionend',onEnd);
 }
 
-// Touch gestures
-var ts={mode:'idle',startX:0,startY:0,lastX:0,lastY:0,startTime:0,moved:false,
-  initDist:0,initZoom:1,initPX:0,initPY:0};
+// ====== Touch handling ======
+var touch={
+  mode:'idle', startX:0, startY:0, lastX:0, lastY:0,
+  moved:false, startTime:0, dir:0, // 1=next candidate, -1=prev candidate
+  startPage:0
+};
 
 mStage.addEventListener('touchstart',function(e){
-  if(mAnimating)return;
+  if(mBusy)return;
   var t=e.touches;
   if(t.length===1){
-    ts.startX=ts.lastX=t[0].clientX;ts.startY=ts.lastY=t[0].clientY;
-    ts.startTime=Date.now();ts.moved=false;
-    ts.initPX=0;ts.initPY=0;
-    ts.mode='swipe';
+    touch.startX=touch.lastX=t[0].clientX;
+    touch.startY=touch.lastY=t[0].clientY;
+    touch.startTime=Date.now();
+    touch.moved=false;
+    touch.dir=0;
+    touch.startPage=mCur;
+    touch.mode='drag';
     
-    // Reset flip to starting position for finger-follow
-    var flip=document.getElementById('m-flip');
-    var nextLayer=document.getElementById('m-next');
-    if(flip){
-      flip.style.transition='none';
-      flip.style.transform='rotateY(0deg)';
-      flip.style.opacity='1';
-    }
+    // Disable transition for finger-follow
+    mFlip.style.transition='none';
   }else if(t.length===2){
-    // Pinch = open zoom overlay with current page
+    // Pinch -> open zoom
     e.preventDefault();
-    openZoom(mCurrentPage+1);
-    ts.mode='pinch';
+    touch.mode='pinch';
+    openZoom(mCur+1);
   }
 },{passive:true});
 
 mStage.addEventListener('touchmove',function(e){
-  if(mAnimating)return;
+  if(mBusy)return;
   var t=e.touches;
-  e.preventDefault();
   
-  if(t.length===1&&ts.mode==='swipe'){
-    var dx=t[0].clientX-ts.startX,dy=t[0].clientY-ts.startY;
-    if(Math.abs(dx)>8)ts.moved=true;
+  if(t.length===1&&touch.mode==='drag'){
+    var dx=t[0].clientX-touch.startX;
+    var dy=t[0].clientY-touch.startY;
     
+    if(Math.abs(dx)>6)touch.moved=true;
+    
+    // Only handle if horizontal is dominant
     if(Math.abs(dx)>Math.abs(dy)*1.2){
-      var flip=document.getElementById('m-flip');
-      var curl=document.getElementById('m-curl-shadow');
-      var nextLayer=document.getElementById('m-next');
-      var nextImg=document.getElementById('m-next-img');
-      var flipBack=document.getElementById('m-flip-back-img');
-      var flipFront=document.getElementById('m-flip-front-img');
+      e.preventDefault();
       
-      if(flip){
-        var w=window.innerWidth;
-        var progress=Math.max(-1,Math.min(1,dx/w));
-        
-        if(progress<0){
-          // Swipe left = flipping to next
-          if(mCurrentPage>=TOTAL_PAGES-1)return;
-          var angle=progress*180;
-          flip.style.transform='rotateY('+angle+'deg)';
-          curl.style.opacity=Math.min(1,Math.abs(progress)*1.5);
-          if(nextLayer&&nextImg){
-            var np=mCurrentPage+2;
-            nextImg.src=IMAGES[np]||IMAGES[TOTAL_PAGES];
-            flipBack.src=IMAGES[np]||IMAGES[TOTAL_PAGES];
-            flipFront.src=IMAGES[mCurrentPage+1];
-            nextLayer.style.opacity='1';
-          }
-        }else{
-          // Swipe right = flipping to previous
-          if(mCurrentPage<=0)return;
-          var angle2=-180+progress*180;
-          flip.style.transform='rotateY('+angle2+'deg)';
-          curl.style.opacity=Math.min(1,(1-progress)*1.5);
-          if(nextLayer&&nextImg){
-            flipFront.src=IMAGES[mCurrentPage];
-            nextImg.src=IMAGES[mCurrentPage];
-            flipBack.src=IMAGES[mCurrentPage+1];
-            nextLayer.style.opacity='1';
-          }
+      var w=window.innerWidth;
+      var progress=Math.max(-1,Math.min(1,dx/w));
+      
+      if(progress<0){
+        // Swipe left = next page
+        if(mCur>=TOTAL_PAGES-1){
+          // Bounce effect for last page
+          var bounce=progress*0.2;
+          mFlip.style.transform='rotateY('+bounce*180+'deg)';
+          mCurl.style.opacity=Math.min(0.3,Math.abs(progress)*0.5);
+          return;
         }
+        touch.dir=1;
+        // Prepare flip back with next page content
+        if(mFlipBackImg.getAttribute('data-page')!==mCur+2){
+          mFlipBackImg.src=IMAGES[mCur+2];
+          mFlipBackImg.setAttribute('data-page',mCur+2);
+        }
+        var angle=progress*180; // 0 to -180
+        mFlip.style.transform='rotateY('+angle+'deg)';
+        mCurl.style.opacity=Math.min(1,Math.abs(progress)*1.5);
+      }else{
+        // Swipe right = prev page
+        if(mCur<=0){
+          var bounce2=progress*0.2;
+          mFlip.style.transform='rotateY('+bounce2*180+'deg)';
+          mCurl.style.opacity=Math.min(0.3,progress*0.5);
+          return;
+        }
+        touch.dir=-1;
+        // For prev: base shows prev, flip starts at -180 and comes to 0
+        // Update base to prev page
+        mBaseImg.src=IMAGES[mCur];
+        // Flip front = prev page (shown when flip is at 0)
+        mFlipFrontImg.src=IMAGES[mCur];
+        // Flip back = current page (shown when flip is at -180)
+        mFlipBackImg.src=IMAGES[mCur+1];
+        // Start from -180deg
+        var angle2=-180+progress*180; // -180 to 0
+        mFlip.style.transform='rotateY('+angle2+'deg)';
+        mCurl.style.opacity=Math.min(1,(1-progress)*1.5);
       }
     }
-    ts.lastX=t[0].clientX;ts.lastY=t[0].clientY;
+    touch.lastX=t[0].clientX;
+    touch.lastY=t[0].clientY;
   }
 },{passive:false});
 
 mStage.addEventListener('touchend',function(e){
-  if(mAnimating)return;
+  if(mBusy)return;
   
-  if(ts.mode==='swipe'&&ts.moved){
-    var dx=ts.lastX-ts.startX,dy=ts.lastY-ts.startY;
-    var flip=document.getElementById('m-flip');
+  if(touch.mode==='drag'&&touch.moved){
+    var dx=touch.lastX-touch.startX;
+    var dy=touch.lastY-touch.startY;
+    var dt=Date.now()-touch.startTime;
     
-    if(Math.abs(dx)>Math.abs(dy)*1.2&&Math.abs(dx)>50){
-      if(dx<0&&mCurrentPage<TOTAL_PAGES-1){
+    if(Math.abs(dx)>Math.abs(dy)*1.2){
+      // Velocity check: fast flick = flip
+      var velocity=dx/dt; // px per ms
+      var fastFlick=Math.abs(velocity)>0.3;
+      var farEnough=Math.abs(dx)>window.innerWidth*0.25;
+      
+      if((fastFlick||farEnough)&&touch.dir===1&&mCur<TOTAL_PAGES-1){
         // Complete next flip
-        mFlipNext();
-      }else if(dx>0&&mCurrentPage>0){
+        mFlip.style.transition='transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
+        mFlip.style.transform='rotateY(-180deg)';
+        mCurl.style.opacity='1';
+        mBusy=true;
+        
+        var onEnd=function(ev){
+          if(ev.propertyName!=='transform')return;
+          mFlip.removeEventListener('transitionend',onEnd);
+          mBaseImg.src=IMAGES[mCur+2];
+          mCur++;
+          mUpdateUI();
+          mFlip.style.transition='none';
+          mFlip.style.transform='rotateY(0deg)';
+          mFlipFrontImg.src=IMAGES[mCur+1];
+          if(mCur+1<TOTAL_PAGES)mFlipBackImg.src=IMAGES[mCur+2];
+          mCurl.style.opacity='0';
+          requestAnimationFrame(function(){
+            void mFlip.offsetWidth;
+            mFlip.style.transition='';
+            mBusy=false;
+          });
+        };
+        mFlip.addEventListener('transitionend',onEnd);
+        
+      }else if((fastFlick||farEnough)&&touch.dir===-1&&mCur>0){
         // Complete prev flip
-        mFlipPrev();
+        mFlip.style.transition='transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94)';
+        mFlip.style.transform='rotateY(0deg)';
+        
+        mBusy=true;
+        var onEnd2=function(ev){
+          if(ev.propertyName!=='transform')return;
+          mFlip.removeEventListener('transitionend',onEnd2);
+          mCur--;
+          mUpdateUI();
+          mFlip.style.transition='none';
+          if(mCur+1<TOTAL_PAGES)mFlipBackImg.src=IMAGES[mCur+2];
+          mCurl.style.opacity='0';
+          requestAnimationFrame(function(){
+            void mFlip.offsetWidth;
+            mFlip.style.transition='';
+            mBusy=false;
+          });
+        };
+        mFlip.addEventListener('transitionend',onEnd2);
+        
       }else{
-        mSnapBack(dx<0);
+        // Snap back
+        mSnapBack(touch.dir);
       }
     }else{
-      mSnapBack(dx<0);
+      // Vertical or minimal swipe - reset
+      mSnapBack(0);
     }
   }
-  ts.mode='idle';
+  
+  touch.mode='idle';
 },{passive:true});
 
-function mSnapBack(isNext){
-  var flip=document.getElementById('m-flip');
-  var curl=document.getElementById('m-curl-shadow');
-  var nextLayer=document.getElementById('m-next');
-  if(!flip)return;
-  flip.style.transition='transform 0.3s ease-out';
-  if(isNext){
-    flip.style.transform='rotateY(0deg)';
-  }else{
-    flip.style.transform='rotateY(-180deg)';
+function mSnapBack(dir){
+  mFlip.style.transition='transform 0.3s ease-out';
+  if(dir===1){
+    // Was going next, snap back to 0deg
+    mFlip.style.transform='rotateY(0deg)';
+  }else if(dir===-1){
+    // Was going prev, snap back to -180 then reset
+    mFlip.style.transform='rotateY(-180deg)';
     setTimeout(function(){
-      flip.style.transition='none';
-      flip.style.transform='rotateY(0deg)';
-      void flip.offsetWidth;
-      flip.style.transition='';
+      mFlip.style.transition='none';
+      mFlip.style.transform='rotateY(0deg)';
+      // Restore base to current page
+      mBaseImg.src=IMAGES[mCur+1];
+      mFlipFrontImg.src=IMAGES[mCur+1];
+      if(mCur+1<TOTAL_PAGES)mFlipBackImg.src=IMAGES[mCur+2];
+      void mFlip.offsetWidth;
+      mFlip.style.transition='';
     },310);
   }
-  curl.style.opacity='0';
-  if(nextLayer)nextLayer.style.opacity='0';
+  mCurl.style.opacity='0';
 }
 
-// Double-tap to open zoom
+// Double-tap to zoom
 var mLastTap=0;
 mStage.addEventListener('click',function(e){
-  if(mAnimating||ts.moved)return;
+  if(mBusy||touch.moved)return;
   var now=Date.now();
   if(now-mLastTap<350){
-    openZoom(mCurrentPage+1);
+    openZoom(mCur+1);
     mLastTap=0;
   }else{mLastTap=now;}
 });
 
 // Tap zones
 document.addEventListener('click',function(e){
-  if(isMobile&&!mAnimating){
+  if(isMobile&&!mBusy){
     var x=e.clientX;
-    if(x<window.innerWidth*0.2){mFlipPrev();}
-    else if(x>window.innerWidth*0.8){mFlipNext();}
+    if(x<window.innerWidth*0.2){mPrev();}
+    else if(x>window.innerWidth*0.8){mNext();}
   }
 });
 
-// Resize
+// ====== Resize ======
 var rt=null;
 window.addEventListener('resize',function(){
   if(rt)clearTimeout(rt);
@@ -695,7 +694,7 @@ window.addEventListener('resize',function(){
       if(isMobile){
         document.getElementById('book-container').style.display='none';
         document.getElementById('mobile-reader').style.display='block';
-        if(!document.getElementById('m-current')){buildMobile();mSetPage(Math.min(currentLeaf,TOTAL_PAGES-1));}
+        if(!mBaseImg){mBuild();mCur=Math.min(currentLeaf,TOTAL_PAGES-1);mBaseImg.src=IMAGES[mCur+1];mFlipFrontImg.src=IMAGES[mCur+1];if(mCur+1<TOTAL_PAGES)mFlipBackImg.src=IMAGES[mCur+2];mUpdateUI();}
       }else{
         document.getElementById('book-container').style.display='block';
         document.getElementById('mobile-reader').style.display='none';
@@ -709,7 +708,7 @@ window.addEventListener('resize',function(){
 document.addEventListener('gesturestart',function(e){e.preventDefault();},{passive:false});
 
 // Init
-if(isMobile){buildMobile();mSetPage(0);}
+if(isMobile){mBuild();mCur=0;mUpdateUI();}
 else{buildBook();updateZIndex();updateUI();}
 
 setTimeout(function(){
