@@ -8,10 +8,11 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 :root{--page-w:400px;--page-h:567px;--spine-w:4px;--flip-duration:0.7s}
 html,body{width:100%;height:100%;overflow:hidden;background:#1a1a1a;font-family:'Georgia','Songti SC','STSong',serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#2a2a2a 0%,#0d0d0d 100%)}
 
 /* === Desktop: 3D flip book === */
-#book-container{perspective:2500px;perspective-origin:center center;position:relative;z-index:1;display:block}
+#book-container{perspective:2500px;perspective-origin:center center;position:relative;z-index:1}
 #book{position:relative;width:calc(var(--page-w)*2);height:var(--page-h);transform-style:preserve-3d}
 #book::before{content:'';position:absolute;left:50%;top:0;width:var(--spine-w);height:100%;background:linear-gradient(to right,transparent,rgba(0,0,0,0.15) 40%,rgba(0,0,0,0.25) 50%,rgba(0,0,0,0.15) 60%,transparent);transform:translateX(-50%);z-index:100;pointer-events:none}
 .leaf{position:absolute;top:0;left:50%;width:var(--page-w);height:var(--page-h);transform-origin:left center;transform-style:preserve-3d;transition:transform var(--flip-duration) cubic-bezier(0.42,0.05,0.3,1)}
@@ -22,24 +23,24 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 .right-page{position:absolute;top:0;left:50%;width:var(--page-w);height:var(--page-h);background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:0 4px 4px 0;pointer-events:none;box-shadow:inset -6px 0 12px -6px rgba(0,0,0,0.3)}
 #book-shadow{position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);width:calc(var(--page-w)*1.8);height:30px;background:radial-gradient(ellipse,rgba(0,0,0,0.5) 0%,transparent 70%);z-index:0}
 
-/* === Mobile: single-page reader === */
+/* === Mobile: Single-page flip reader === */
 #mobile-reader{display:none;position:fixed;inset:0;z-index:500;overflow:hidden;background:#0d0d0d;touch-action:none}
-#mobile-scroll{position:absolute;top:0;left:0;width:100%;height:100%;overflow-x:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;scroll-behavior:smooth}
-#mobile-pages-wrapper{position:relative;width:100%;display:flex;flex-direction:column;align-items:center;padding:0 0 60px 0}
-.mobile-page{width:100%;display:flex;justify-content:center;align-items:flex-start;position:relative}
-.mobile-page img{width:100%;max-width:520px;height:auto;display:block;pointer-events:none}
-.mobile-page-num{text-align:center;color:rgba(255,255,255,0.3);font-size:11px;padding:4px 0 12px 0}
+#mobile-stage{position:relative;width:100%;height:100%;overflow:hidden;touch-action:none}
+.mobile-page-wrap{position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.mobile-page-wrap.flipping{transition:transform 0.45s cubic-bezier(0.25,0.1,0.25,1)}
+.mobile-page-wrap.flip-right{transform:translateX(-100%)}
+.mobile-page-wrap.flip-left{transform:translateX(100%)}
+.mobile-page-wrap.flip-from-right{transform:translateX(100%);transition:none}
+.mobile-page-wrap.flip-from-left{transform:translateX(-100%);transition:none}
+.mobile-page-inner{position:relative;transform-origin:center center;will-change:transform;transition:transform 0.2s ease;touch-action:none}
+.mobile-page-inner.dragging{transition:none}
+.mobile-page-inner img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;-webkit-user-drag:none}
 
-/* Zoom container for mobile */
-#mobile-zoom{position:fixed;inset:0;z-index:600;display:none;overflow:hidden;background:rgba(0,0,0,0.95);touch-action:none}
-#mobile-zoom.active{display:block}
-#mobile-zoom-img{position:absolute;top:50%;left:50%;max-width:none;max-height:none;transform-origin:center center;will-change:transform;pointer-events:none}
-#mobile-zoom-close{position:fixed;top:16px;right:16px;width:44px;height:44px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);border-radius:50%;color:rgba(255,255,255,0.8);font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:610;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-
-/* Shared UI */
+/* Desktop flip book click zones */
 .click-zone{position:fixed;top:0;height:100%;width:12%;z-index:200;cursor:pointer;opacity:0;display:none}
 .click-zone.left{left:0}
 .click-zone.right{right:0}
+
 .nav-btn{position:fixed;top:50%;transform:translateY(-50%);width:48px;height:48px;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.25);border-radius:50%;color:rgba(255,255,255,0.7);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:300;transition:all 0.2s ease;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .nav-btn:hover{background:rgba(255,255,255,0.22);border-color:rgba(255,255,255,0.45);color:rgba(255,255,255,0.95)}
 .nav-btn:active{transform:translateY(-50%) scale(0.92)}
@@ -47,9 +48,14 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 #prev-btn{left:16px}
 #next-btn{right:16px}
 
-#page-indicator{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.55);font-size:12px;letter-spacing:2px;z-index:300;background:rgba(0,0,0,0.35);padding:6px 18px;border-radius:20px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap;pointer-events:none}
+#page-indicator{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.55);font-size:12px;letter-spacing:1px;z-index:300;background:rgba(0,0,0,0.4);padding:6px 18px;border-radius:20px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap;pointer-events:none}
 #title-bar{position:fixed;top:14px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:14px;letter-spacing:4px;z-index:300;pointer-events:none}
 #progress-bar{position:fixed;bottom:0;left:0;height:3px;background:linear-gradient(to right,#c9a96e,#e8c89a);width:0;z-index:400;transition:width 0.3s ease}
+
+/* Mobile tap zones (left/right edges) */
+.mobile-tap{position:fixed;top:0;height:100%;width:20%;z-index:250;opacity:0;display:none}
+.mobile-tap.left{left:0}
+.mobile-tap.right{right:0}
 
 #loading{position:fixed;inset:0;background:#0d0d0d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s ease}
 #loading.hidden{opacity:0;pointer-events:none}
@@ -57,33 +63,25 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 #loading .text{margin-top:16px;color:rgba(255,255,255,0.4);font-size:14px;letter-spacing:2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* Mobile: show nav buttons smaller */
-@media(max-width:660px){
-  .nav-btn{width:40px;height:40px;font-size:18px}
-  #prev-btn{left:8px}
-  #next-btn{right:8px}
-  #page-indicator{font-size:10px;padding:4px 14px;bottom:12px}
-  #title-bar{font-size:12px;top:10px}
-}
-
-/* Desktop: show flip book + click zones */
+/* Desktop */
 @media(min-width:661px){
   #book-container{display:block}
   #mobile-reader{display:none !important}
   .click-zone{display:block}
+  .mobile-tap{display:none}
 }
-
-/* Mobile: show single-page reader, hide flip book */
+/* Mobile */
 @media(max-width:660px){
   #book-container{display:none !important}
   #mobile-reader{display:block !important}
   .nav-btn{display:none}
-  .click-zone{display:none}
+  .mobile-tap{display:block}
   #book-shadow{display:none}
+  #page-indicator{font-size:10px;bottom:12px;padding:4px 14px}
+  #title-bar{font-size:12px;top:10px}
 }
-
-/* Prevent text size adjust */
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+/* Small phone */
+@media(max-width:400px){.mobile-tap{width:25%}}
 </style>
 </head>
 <body>
@@ -91,25 +89,17 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 <div id="loading"><div class="spinner"></div><div class="text">正在加载电子书...</div></div>
 <div id="title-bar">《火种》</div>
 
-<!-- Desktop flip book -->
 <div id="book-container">
   <div id="book"></div>
   <div id="book-shadow"></div>
 </div>
 
-<!-- Mobile single-page reader -->
 <div id="mobile-reader">
-  <div id="mobile-scroll">
-    <div id="mobile-pages-wrapper"></div>
-  </div>
+  <div id="mobile-stage"></div>
 </div>
 
-<!-- Mobile zoom overlay -->
-<div id="mobile-zoom">
-  <div id="mobile-zoom-close">&#10005;</div>
-  <img id="mobile-zoom-img" src="" alt="">
-</div>
-
+<div class="mobile-tap left" id="mtap-left"></div>
+<div class="mobile-tap right" id="mtap-right"></div>
 <div class="click-zone left" id="click-left"></div>
 <div class="click-zone right" id="click-right"></div>
 <button class="nav-btn" id="prev-btn">&#10094;</button>
@@ -153,6 +143,7 @@ var IMAGES={"1":"data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAQDAwMD
 var TOTAL_PAGES = 31;
 var TOTAL_LEAVES = 15;
 var currentLeaf = 0;
+var currentMobilePage = 0;
 var isMobile = window.innerWidth <= 660;
 
 var book = document.getElementById('book');
@@ -163,7 +154,7 @@ var progressBar = document.getElementById('progress-bar');
 var loadingEl = document.getElementById('loading');
 
 var chapterMap = {
-  1:'封面', 2:'目录', 3:'目录',
+  1:'封面',2:'目录',3:'目录',
   4:'第一章·立土',5:'第一章·立土',6:'第一章·立土',7:'第一章·立土',8:'第一章·立土',9:'第一章·立土',
   10:'第二章·盛土',11:'第二章·盛土',12:'第二章·盛土',13:'第二章·盛土',14:'第二章·盛土',
   15:'第三章·折土',16:'第三章·折土',17:'第三章·折土',18:'第三章·折土',19:'第三章·折土',
@@ -177,159 +168,279 @@ function buildBook() {
   book.innerHTML = '';
   for (var i = 0; i < TOTAL_LEAVES; i++) {
     var leaf = document.createElement('div');
-    leaf.className = 'leaf';
-    leaf.setAttribute('data-leaf', i);
-    var frontPage = 2 * i + 1;
-    var backPage = 2 * i + 2;
-    var front = document.createElement('div');
-    front.className = 'page front';
-    front.style.backgroundImage = "url('" + IMAGES[frontPage] + "')";
-    leaf.appendChild(front);
-    var back = document.createElement('div');
-    back.className = 'page back';
-    back.style.backgroundImage = "url('" + IMAGES[backPage] + "')";
-    leaf.appendChild(back);
+    leaf.className = 'leaf'; leaf.setAttribute('data-leaf', i);
+    var front = document.createElement('div'); front.className = 'page front';
+    front.style.backgroundImage = "url('" + IMAGES[2*i+1] + "')"; leaf.appendChild(front);
+    var back = document.createElement('div'); back.className = 'page back';
+    back.style.backgroundImage = "url('" + IMAGES[2*i+2] + "')"; leaf.appendChild(back);
     book.appendChild(leaf);
   }
-  var sr = document.createElement('div');
-  sr.className = 'right-page';
-  sr.id = 'static-right';
-  sr.style.backgroundImage = "url('" + IMAGES[31] + "')";
-  sr.style.display = 'none';
+  var sr = document.createElement('div'); sr.className = 'right-page'; sr.id = 'static-right';
+  sr.style.backgroundImage = "url('" + IMAGES[31] + "')"; sr.style.display = 'none';
   book.appendChild(sr);
 }
-
 function updateZIndex() {
   var leaves = book.querySelectorAll('.leaf');
   for (var i = 0; i < leaves.length; i++) {
-    if (i < currentLeaf) leaves[i].style.zIndex = i + 1;
-    else leaves[i].style.zIndex = TOTAL_LEAVES - i;
+    leaves[i].style.zIndex = i < currentLeaf ? i+1 : TOTAL_LEAVES-i;
   }
 }
-
 function flipNext() {
   if (currentLeaf >= TOTAL_LEAVES) return;
   var leaf = book.querySelector('.leaf[data-leaf="' + currentLeaf + '"]');
   if (leaf) { leaf.classList.add('flipped'); currentLeaf++; updateZIndex(); updateUI(); }
 }
 function flipPrev() {
-  if (currentLeaf <= 0) return;
-  currentLeaf--;
+  if (currentLeaf <= 0) return; currentLeaf--;
   var leaf = book.querySelector('.leaf[data-leaf="' + currentLeaf + '"]');
   if (leaf) { leaf.classList.remove('flipped'); updateZIndex(); updateUI(); }
 }
 
-// ============ MOBILE: Single-page reader ============
+// ============ MOBILE: Single-page flip + direct zoom ============
+var mStage = document.getElementById('mobile-stage');
+var mPages = []; // page wrap elements
+var mInners = []; // inner transform elements for zoom/pan
+var mZoom = 1, mPanX = 0, mPanY = 0;
+var mIsZoomed = false;
+var mIsAnimating = false;
+
 function buildMobileReader() {
-  var wrapper = document.getElementById('mobile-pages-wrapper');
-  wrapper.innerHTML = '';
-  for (var i = 1; i <= TOTAL_PAGES; i++) {
-    var div = document.createElement('div');
-    div.className = 'mobile-page';
-    div.setAttribute('data-page', i);
+  mStage.innerHTML = ''; mPages = []; mInners = [];
+  for (var i = 0; i < TOTAL_PAGES; i++) {
+    var wrap = document.createElement('div');
+    wrap.className = 'mobile-page-wrap';
+    wrap.style.transform = i === 0 ? 'translateX(0)' : 'translateX(100%)';
+    wrap.style.zIndex = i === 0 ? 2 : 1;
+    
+    var inner = document.createElement('div');
+    inner.className = 'mobile-page-inner';
+    
     var img = document.createElement('img');
-    img.src = IMAGES[i];
-    img.setAttribute('data-page', i);
-    img.loading = 'lazy';
-    div.appendChild(img);
+    img.src = IMAGES[i+1];
+    img.alt = '';
+    inner.appendChild(img);
+    wrap.appendChild(inner);
+    mStage.appendChild(wrap);
     
-    var num = document.createElement('div');
-    num.className = 'mobile-page-num';
-    num.textContent = chapterMap[i] + ' · 第' + i + '页';
-    div.appendChild(num);
-    
-    wrapper.appendChild(div);
+    mPages.push(wrap);
+    mInners.push(inner);
   }
 }
 
-// ============ MOBILE: Zoom overlay ============
-var mzImg = document.getElementById('mobile-zoom-img');
-var mzOverlay = document.getElementById('mobile-zoom');
-var mzClose = document.getElementById('mobile-zoom-close');
-var mzScale = 1, mzX = 0, mzY = 0;
-var mzDragging = false, mzStartX = 0, mzStartY = 0;
-var mzInitDist = 0, mzInitScale = 1;
+function mApplyZoom() {
+  if (currentMobilePage < 0 || currentMobilePage >= mInners.length) return;
+  var inner = mInners[currentMobilePage];
+  inner.style.transform = 'translate(' + mPanX + 'px,' + mPanY + 'px) scale(' + mZoom + ')';
+  mIsZoomed = mZoom > 1.05;
+}
 
-function mzApply() {
-  mzImg.style.transform = 'translate(-50%,-50%) translate(' + mzX + 'px,' + mzY + 'px) scale(' + mzScale + ')';
+function mGoToPage(pageNum) {
+  if (mIsAnimating) return;
+  pageNum = Math.max(0, Math.min(TOTAL_PAGES - 1, pageNum));
+  if (pageNum === currentMobilePage) return;
+  
+  mIsAnimating = true;
+  var dir = pageNum > currentMobilePage ? 1 : -1; // 1=next, -1=prev
+  var oldPage = currentMobilePage;
+  var newWrap = mPages[pageNum];
+  var oldWrap = mPages[oldPage];
+  
+  // Reset zoom on old page
+  mZoom = 1; mPanX = 0; mPanY = 0;
+  mInners[oldPage].style.transform = '';
+  
+  // Position new page
+  newWrap.classList.add('flipping');
+  newWrap.style.transform = dir > 0 ? 'translateX(100%)' : 'translateX(-100%)';
+  newWrap.style.zIndex = 3;
+  
+  // Force reflow
+  newWrap.offsetHeight;
+  
+  // Animate new page in
+  newWrap.style.transform = 'translateX(0)';
+  // Animate old page out
+  oldWrap.classList.add('flipping');
+  oldWrap.style.transform = dir > 0 ? 'translateX(-100%)' : 'translateX(100%)';
+  
+  currentMobilePage = pageNum;
+  
+  setTimeout(function() {
+    oldWrap.classList.remove('flipping');
+    newWrap.classList.remove('flipping');
+    oldWrap.style.zIndex = 1;
+    newWrap.style.zIndex = 2;
+    mIsAnimating = false;
+    mUpdateUI();
+  }, 460);
 }
-function mzOpen(pageNum) {
-  mzImg.src = IMAGES[pageNum] || '';
-  mzOverlay.classList.add('active');
-  mzScale = 1; mzX = 0; mzY = 0;
-  mzApply();
-}
-function mzCloseFn() {
-  mzOverlay.classList.remove('active');
-}
-mzClose.addEventListener('click', mzCloseFn);
-mzOverlay.addEventListener('click', function(e){ if(e.target===mzOverlay) mzCloseFn(); });
 
-// Double-tap to open zoom on mobile pages
-var lastTap = 0;
-document.getElementById('mobile-pages-wrapper').addEventListener('click', function(e) {
-  var page = e.target.closest('.mobile-page');
-  if (!page) return;
-  var pageNum = parseInt(page.getAttribute('data-page'));
+function mNext() { if (currentMobilePage < TOTAL_PAGES - 1) mGoToPage(currentMobilePage + 1); }
+function mPrev() { if (currentMobilePage > 0) mGoToPage(currentMobilePage - 1); }
+
+function mUpdateUI() {
+  var pn = currentMobilePage + 1;
+  pageIndicator.textContent = chapterMap[pn] + ' · 第' + pn + '页 / 共' + TOTAL_PAGES + '页';
+  progressBar.style.width = (pn / TOTAL_PAGES * 100) + '%';
+}
+
+// ============ Mobile touch gestures ============
+var touchState = { mode: 'idle', startX: 0, startY: 0, lastX: 0, lastY: 0, dist: 0, initDist: 0, initZoom: 1, initPanX: 0, initPanY: 0, moved: false };
+
+mStage.addEventListener('touchstart', function(e) {
+  if (mIsAnimating) return;
+  var t = e.touches;
+  if (t.length === 1) {
+    touchState.mode = mIsZoomed ? 'pan' : 'swipe';
+    touchState.startX = touchState.lastX = t[0].clientX;
+    touchState.startY = touchState.lastY = t[0].clientY;
+    touchState.initPanX = mPanX; touchState.initPanY = mPanY;
+    touchState.moved = false;
+    if (mIsZoomed) mInners[currentMobilePage].classList.add('dragging');
+  } else if (t.length === 2) {
+    touchState.mode = 'pinch';
+    var dx = t[0].clientX - t[1].clientX;
+    var dy = t[0].clientY - t[1].clientY;
+    touchState.initDist = Math.max(1, Math.sqrt(dx*dx + dy*dy));
+    touchState.initZoom = mZoom;
+    touchState.initPanX = mPanX; touchState.initPanY = mPanY;
+    touchState.moved = false;
+    mInners[currentMobilePage].classList.add('dragging');
+  }
+}, {passive: true});
+
+mStage.addEventListener('touchmove', function(e) {
+  if (mIsAnimating) return;
+  var t = e.touches;
+  e.preventDefault();
+  
+  if (t.length === 1 && touchState.mode === 'pan') {
+    var dx = t[0].clientX - touchState.startX;
+    var dy = t[0].clientY - touchState.startY;
+    mPanX = touchState.initPanX + dx;
+    mPanY = touchState.initPanY + dy;
+    mApplyZoom();
+    touchState.moved = true;
+  } else if (t.length === 1 && touchState.mode === 'swipe') {
+    // Track horizontal movement for potential flip
+    var dx = t[0].clientX - touchState.startX;
+    var dy = t[0].clientY - touchState.startY;
+    if (Math.abs(dx) > 10) touchState.moved = true;
+    // Follow finger for flip preview
+    if (Math.abs(dx) > Math.abs(dy) * 1.5 && Math.abs(dx) > 15) {
+      var progress = dx / window.innerWidth;
+      var oldPage = currentMobilePage;
+      var newPage = dx < 0 ? currentMobilePage + 1 : currentMobilePage - 1;
+      if (newPage >= 0 && newPage < TOTAL_PAGES) {
+        var newWrap = mPages[newPage];
+        var oldWrap = mPages[oldPage];
+        newWrap.style.transition = 'none';
+        oldWrap.style.transition = 'none';
+        newWrap.style.zIndex = 3;
+        newWrap.style.transform = 'translateX(' + (100 + progress * 100) + '%)';
+        oldWrap.style.transform = 'translateX(' + (progress * 100) + '%)';
+      }
+      touchState.lastX = t[0].clientX;
+      touchState.lastY = t[0].clientY;
+    }
+  } else if (t.length === 2 && touchState.mode === 'pinch') {
+    var dx2 = t[0].clientX - t[1].clientX;
+    var dy2 = t[0].clientY - t[1].clientY;
+    var dist = Math.max(1, Math.sqrt(dx2*dx2 + dy2*dy2));
+    mZoom = Math.max(0.5, Math.min(6, touchState.initZoom * (dist / touchState.initDist)));
+    // Pan to keep center between fingers
+    var cx = (t[0].clientX + t[1].clientX) / 2;
+    var cy = (t[0].clientY + t[1].clientY) / 2;
+    mPanX = touchState.initPanX;
+    mPanY = touchState.initPanY;
+    mApplyZoom();
+    touchState.moved = true;
+  }
+  touchState.lastX = t.length > 0 ? t[0].clientX : touchState.lastX;
+  touchState.lastY = t.length > 0 ? t[0].clientY : touchState.lastY;
+}, {passive: false});
+
+mStage.addEventListener('touchend', function(e) {
+  if (mIsAnimating) return;
+  var inner = mInners[currentMobilePage];
+  inner.classList.remove('dragging');
+  
+  if (touchState.mode === 'swipe') {
+    var dx = touchState.lastX - touchState.startX;
+    var dy = touchState.lastY - touchState.startY;
+    
+    if (Math.abs(dx) > Math.abs(dy) * 1.5 && Math.abs(dx) > 60) {
+      // Complete the flip
+      if (dx < 0) mNext(); else mPrev();
+    } else {
+      // Snap back
+      var oldPage = currentMobilePage;
+      var newPage = dx < 0 ? currentMobilePage + 1 : currentMobilePage - 1;
+      if (newPage >= 0 && newPage < TOTAL_PAGES && touchState.moved) {
+        var newWrap = mPages[newPage];
+        var oldWrap = mPages[oldPage];
+        newWrap.classList.add('flipping');
+        oldWrap.classList.add('flipping');
+        newWrap.style.transform = dx < 0 ? 'translateX(100%)' : 'translateX(-100%)';
+        oldWrap.style.transform = 'translateX(0)';
+        setTimeout(function() {
+          newWrap.classList.remove('flipping');
+          oldWrap.classList.remove('flipping');
+          newWrap.style.zIndex = 1;
+        }, 460);
+      }
+    }
+  } else if (touchState.mode === 'pinch') {
+    // If zoomed back to ~1, snap to 1
+    if (mZoom < 1.05) {
+      mZoom = 1; mPanX = 0; mPanY = 0;
+      mApplyZoom();
+    }
+  } else if (touchState.mode === 'pan' && !touchState.moved) {
+    // It was a tap (no movement while zoomed) - do nothing, let tap handler work
+  }
+  
+  touchState.mode = 'idle';
+}, {passive: true});
+
+// Double-tap to toggle zoom on mobile
+var lastMobileTap = 0;
+mStage.addEventListener('click', function(e) {
+  if (mIsAnimating) return;
+  if (touchState.moved) return; // Was a drag, not a tap
   var now = Date.now();
-  if (now - lastTap < 350) {
-    e.preventDefault(); e.stopPropagation();
-    mzOpen(pageNum);
-    lastTap = 0;
+  if (now - lastMobileTap < 350) {
+    // Double tap: toggle zoom
+    if (mIsZoomed) {
+      mZoom = 1; mPanX = 0; mPanY = 0;
+      mApplyZoom();
+    } else {
+      mZoom = 2.5;
+      // Zoom toward tap point
+      var rect = mStage.getBoundingClientRect();
+      var tx = e.clientX - rect.left - rect.width / 2;
+      var ty = e.clientY - rect.top - rect.height / 2;
+      mPanX = -tx * (mZoom - 1) / 2;
+      mPanY = -ty * (mZoom - 1) / 2;
+      mApplyZoom();
+    }
+    lastMobileTap = 0;
   } else {
-    lastTap = now;
+    lastMobileTap = now;
   }
 });
 
-// Touch gestures in zoom overlay
-mzOverlay.addEventListener('touchstart', function(e) {
-  if (e.touches.length === 1) {
-    mzDragging = true;
-    mzStartX = e.touches[0].clientX - mzX;
-    mzStartY = e.touches[0].clientY - mzY;
-  } else if (e.touches.length === 2) {
-    mzDragging = false;
-    var dx = e.touches[0].clientX - e.touches[1].clientX;
-    var dy = e.touches[0].clientY - e.touches[1].clientY;
-    mzInitDist = Math.sqrt(dx*dx + dy*dy);
-    mzInitScale = mzScale;
-  }
-}, {passive:true});
+// Tap zones for flip (left/right edges)
+document.getElementById('mtap-left').addEventListener('click', function() {
+  if (!mIsZoomed && !mIsAnimating) mPrev();
+});
+document.getElementById('mtap-right').addEventListener('click', function() {
+  if (!mIsZoomed && !mIsAnimating) mNext();
+});
 
-mzOverlay.addEventListener('touchmove', function(e) {
-  e.preventDefault();
-  if (e.touches.length === 1 && mzDragging) {
-    mzX = e.touches[0].clientX - mzStartX;
-    mzY = e.touches[0].clientY - mzStartY;
-    mzApply();
-  } else if (e.touches.length === 2) {
-    var dx = e.touches[0].clientX - e.touches[1].clientX;
-    var dy = e.touches[0].clientY - e.touches[1].clientY;
-    var dist = Math.sqrt(dx*dx + dy*dy);
-    if (mzInitDist > 0) {
-      mzScale = Math.max(0.5, Math.min(8, mzInitScale * (dist / mzInitDist)));
-      mzApply();
-    }
-  }
-}, {passive:false});
-
-mzOverlay.addEventListener('touchend', function(e) {
-  if (e.touches.length === 0) { mzDragging = false; }
-  // Double-tap to reset
-  var now = Date.now();
-  if (now - lastTap < 300 && e.touches.length === 0) {
-    mzScale = 1; mzX = 0; mzY = 0;
-    mzApply();
-  }
-  lastTap = now;
-}, {passive:true});
-
-// ============ UI updates ============
+// ============ Desktop UI ============
 function updateUI() {
-  if (isMobile) {
-    // Mobile: update based on scroll position (handled by scroll listener)
-    return;
-  }
+  if (isMobile) return;
   var sr = document.getElementById('static-right');
   if (currentLeaf === 0) {
     sr.style.display = 'none';
@@ -339,14 +450,11 @@ function updateUI() {
     pageIndicator.textContent = '第六章·归根 · 第30-31页';
   } else {
     sr.style.display = 'none';
-    var leftPage = 2*(currentLeaf-1)+2;
-    var rightPage = 2*currentLeaf+1;
-    if (leftPage===2 && rightPage===3) {
-      pageIndicator.textContent = '目录 · 第2-3页';
-    } else {
-      var lc = chapterMap[leftPage]||'', rc = chapterMap[rightPage]||'';
-      if (lc===rc) pageIndicator.textContent = lc+' · 第'+leftPage+'-'+rightPage+'页';
-      else pageIndicator.textContent = lc+'/'+rc+' · 第'+leftPage+'-'+rightPage+'页';
+    var lp = 2*(currentLeaf-1)+2, rp = 2*currentLeaf+1;
+    if (lp===2 && rp===3) pageIndicator.textContent = '目录 · 第2-3页';
+    else {
+      var lc = chapterMap[lp]||'', rc = chapterMap[rp]||'';
+      pageIndicator.textContent = lc===rc ? lc+' · 第'+lp+'-'+rp+'页' : lc+'/'+rc+' · 第'+lp+'-'+rp+'页';
     }
   }
   progressBar.style.width = (currentLeaf/TOTAL_LEAVES*100)+'%';
@@ -354,27 +462,7 @@ function updateUI() {
   nextBtn.disabled = currentLeaf>=TOTAL_LEAVES;
 }
 
-// Mobile scroll-based page indicator
-var scrollTimer = null;
-var mobileScroll = document.getElementById('mobile-scroll');
-mobileScroll.addEventListener('scroll', function() {
-  if (!isMobile) return;
-  if (scrollTimer) clearTimeout(scrollTimer);
-  scrollTimer = setTimeout(function() {
-    var pages = document.querySelectorAll('.mobile-page');
-    var scrollY = mobileScroll.scrollTop + window.innerHeight/3;
-    var currentPage = 1;
-    for (var i = 0; i < pages.length; i++) {
-      if (pages[i].offsetTop <= scrollY) {
-        currentPage = i+1;
-      }
-    }
-    pageIndicator.textContent = chapterMap[currentPage] + ' · 第' + currentPage + '页 / 共' + TOTAL_PAGES + '页';
-    progressBar.style.width = (currentPage/TOTAL_PAGES*100)+'%';
-  }, 80);
-}, {passive:true});
-
-// ============ Navigation ============
+// Desktop navigation
 if (!isMobile) {
   nextBtn.onclick = flipNext;
   prevBtn.onclick = flipPrev;
@@ -382,49 +470,38 @@ if (!isMobile) {
   document.getElementById('click-left').onclick = flipPrev;
 }
 
-// Touch swipe for mobile reader (horizontal swipe = no action, use scroll)
-// Touch swipe for desktop flip book
-var touchStartX = 0, touchStartY = 0;
+// Desktop touch
+var dTouchX = 0, dTouchY = 0;
 document.addEventListener('touchstart', function(e) {
-  if (isMobile) return;
-  if (mzOverlay.classList.contains('active')) return;
-  touchStartX = e.touches[0].clientX;
-  touchStartY = e.touches[0].clientY;
+  if (!isMobile) { dTouchX = e.touches[0].clientX; dTouchY = e.touches[0].clientY; }
 }, {passive:true});
-
 document.addEventListener('touchend', function(e) {
   if (isMobile) return;
-  if (mzOverlay.classList.contains('active')) return;
-  var dx = e.changedTouches[0].clientX - touchStartX;
-  var dy = e.changedTouches[0].clientY - touchStartY;
-  if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy)*1.5) {
-    if (dx < 0) flipNext(); else flipPrev();
-  }
+  var dx = e.changedTouches[0].clientX - dTouchX;
+  var dy = e.changedTouches[0].clientY - dTouchY;
+  if (Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5) { if(dx<0) flipNext(); else flipPrev(); }
 }, {passive:true});
 
-// Keyboard (desktop)
+// Keyboard
 document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') { mzCloseFn(); return; }
   if (isMobile) return;
-  if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); flipNext(); }
-  else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); flipPrev(); }
-  else if (e.key === 'Home') { while(currentLeaf>0) flipPrev(); }
-  else if (e.key === 'End') { while(currentLeaf<TOTAL_LEAVES) flipNext(); }
+  if (e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();flipNext();}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();flipPrev();}
+  else if(e.key==='Home'){while(currentLeaf>0)flipPrev();}
+  else if(e.key==='End'){while(currentLeaf<TOTAL_LEAVES)flipNext();}
 });
 
-// Mouse wheel (desktop)
+// Mouse wheel
 var wheelLock = false;
 document.addEventListener('wheel', function(e) {
   if (isMobile) return;
   if (wheelLock) return;
   if (Math.abs(e.deltaY)<30 && Math.abs(e.deltaX)<30) return;
-  if (e.deltaY>0||e.deltaX>0) flipNext();
-  else flipPrev();
-  wheelLock = true;
-  setTimeout(function(){wheelLock=false;},500);
+  if (e.deltaY>0||e.deltaX>0) flipNext(); else flipPrev();
+  wheelLock = true; setTimeout(function(){wheelLock=false;},500);
 }, {passive:true});
 
-// ============ Detect resize / orientation change ============
+// Resize
 var resizeTimer = null;
 window.addEventListener('resize', function() {
   if (resizeTimer) clearTimeout(resizeTimer);
@@ -435,42 +512,35 @@ window.addEventListener('resize', function() {
       if (isMobile) {
         document.getElementById('book-container').style.display = 'none';
         document.getElementById('mobile-reader').style.display = 'block';
-        document.getElementById('prev-btn').style.display = 'none';
-        document.getElementById('next-btn').style.display = 'none';
+        mUpdateUI();
       } else {
         document.getElementById('book-container').style.display = 'block';
         document.getElementById('mobile-reader').style.display = 'none';
-        document.getElementById('prev-btn').style.display = 'flex';
-        document.getElementById('next-btn').style.display = 'flex';
         updateUI();
       }
     }
   }, 300);
 });
 
-// ============ Init ============
+// Prevent WeChat gestures
+document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+var lastBodyTap = 0;
+document.body.addEventListener('touchend', function(e) {
+  if (e.target.closest('.mobile-page-inner, .page, .right-page, .mobile-tap')) return;
+  var now = Date.now();
+  if (now - lastBodyTap < 350) e.preventDefault();
+  lastBodyTap = now;
+}, {passive:false});
+
+// Init
 if (isMobile) {
   buildMobileReader();
-  // Set initial indicator
-  pageIndicator.textContent = '封面 · 第1页 / 共' + TOTAL_PAGES + '页';
-  progressBar.style.width = (1/TOTAL_PAGES*100)+'%';
+  mUpdateUI();
 } else {
   buildBook();
   updateZIndex();
   updateUI();
 }
-
-// Prevent WeChat browser from intercepting gestures
-document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
-
-// Prevent double-tap zoom on body (but allow on pages)
-var lastBodyTap = 0;
-document.body.addEventListener('touchend', function(e) {
-  if (e.target.closest('.mobile-page, #mobile-zoom-img, .page, .right-page')) return;
-  var now = Date.now();
-  if (now - lastBodyTap < 350) { e.preventDefault(); }
-  lastBodyTap = now;
-}, {passive:false});
 
 setTimeout(function() {
   loadingEl.classList.add('hidden');
