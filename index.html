@@ -3,136 +3,88 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>《火种》 - 在线电子书</title>
+<meta name="format-detection" content="telephone=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<title>《火种》</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-:root{--page-w:400px;--page-h:567px;--spine-w:4px;--flip-duration:0.7s}
-html,body{width:100%;height:100%;overflow:hidden;background:#1a1a1a;font-family:'Georgia','Songti SC','STSong',serif;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-html{-webkit-text-size-adjust:100%}
-body{display:flex;flex-direction:column;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#2a2a2a 0%,#0d0d0d 100%)}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{background:#0a0a0a;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
 
 /* ====== DESKTOP: 3D flip book ====== */
-#book-container{perspective:2500px;perspective-origin:center center;position:relative;z-index:1}
-#book{position:relative;width:calc(var(--page-w)*2);height:var(--page-h);transform-style:preserve-3d}
-#book::before{content:'';position:absolute;left:50%;top:0;width:var(--spine-w);height:100%;background:linear-gradient(to right,transparent,rgba(0,0,0,0.15) 40%,rgba(0,0,0,0.25) 50%,rgba(0,0,0,0.15) 60%,transparent);transform:translateX(-50%);z-index:100;pointer-events:none}
-.leaf{position:absolute;top:0;left:50%;width:var(--page-w);height:var(--page-h);transform-origin:left center;transform-style:preserve-3d;transition:transform var(--flip-duration) cubic-bezier(0.42,0.05,0.3,1)}
+#desktop{display:none;width:100%;height:100vh;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#2a2a2a 0%,#0d0d0d 100%)}
+#book-container{perspective:2500px;position:relative}
+#book{position:relative;width:800px;height:1134px;transform-style:preserve-3d}
+#book::before{content:'';position:absolute;left:50%;top:0;width:4px;height:100%;background:linear-gradient(to right,transparent,rgba(0,0,0,0.15) 40%,rgba(0,0,0,0.25) 50%,rgba(0,0,0,0.15) 60%,transparent);transform:translateX(-50%);z-index:100;pointer-events:none}
+.leaf{position:absolute;top:0;left:50%;width:400px;height:1134px;transform-origin:left center;transform-style:preserve-3d;transition:transform 0.7s cubic-bezier(0.42,0.05,0.3,1)}
 .leaf.flipped{transform:rotateY(-180deg)}
 .page{position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;background-repeat:no-repeat;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
 .page.front{border-radius:0 4px 4px 0;box-shadow:inset -6px 0 12px -6px rgba(0,0,0,0.3)}
 .page.back{transform:rotateY(180deg);border-radius:4px 0 0 4px;box-shadow:inset 6px 0 12px -6px rgba(0,0,0,0.3)}
-.right-page{position:absolute;top:0;left:50%;width:var(--page-w);height:var(--page-h);background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:0 4px 4px 0;pointer-events:none;box-shadow:inset -6px 0 12px -6px rgba(0,0,0,0.3)}
-#book-shadow{position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);width:calc(var(--page-w)*1.8);height:30px;background:radial-gradient(ellipse,rgba(0,0,0,0.5) 0%,transparent 70%);z-index:0}
+.right-page{position:absolute;top:0;left:50%;width:400px;height:1134px;background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:0 4px 4px 0;pointer-events:none;box-shadow:inset -6px 0 12px -6px rgba(0,0,0,0.3)}
+#book-shadow{position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);width:720px;height:30px;background:radial-gradient(ellipse,rgba(0,0,0,0.5) 0%,transparent 70%);z-index:0}
 .click-zone{position:fixed;top:0;height:100%;width:12%;z-index:200;cursor:pointer;opacity:0}
 .click-zone.left{left:0}.click-zone.right{right:0}
 
-/* ====== MOBILE: 3-page sliding flip ====== */
-#mobile-reader{display:none;position:fixed;inset:0;z-index:500;overflow:hidden;background:#0d0d0d}
-#m-stage{position:relative;width:100%;height:100%;perspective:1200px;perspective-origin:center center;overflow:hidden;touch-action:none}
+/* ====== MOBILE: Slide reader ====== */
+#mobile{display:none;position:fixed;inset:0;background:#0a0a0a;overflow:hidden;touch-action:none}
+#m-viewport{position:relative;width:100%;height:100%;overflow:hidden}
+.m-slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94),opacity 0.35s ease;will-change:transform,opacity;transform:translateZ(0)}
+.m-slide img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;pointer-events:none;-webkit-user-drag:none;display:block}
+.m-slide.left{transform:translateX(-100%)}
+.m-slide.right{transform:translateX(100%)}
+.m-slide.hide{opacity:0;pointer-events:none}
 
-/* 3-page structure: prev | current | next, all pre-loaded */
-.m-page{
-  position:absolute;top:0;left:0;width:100%;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  will-change:transform,opacity;
-  backface-visibility:hidden;-webkit-backface-visibility:hidden;
-  transform:translateZ(0);
-}
-.m-page img{
-  max-width:100%;max-height:100%;width:auto;height:auto;
-  object-fit:contain;pointer-events:none;-webkit-user-drag:none;user-select:none;
-  display:block;transform:translateZ(0);
-}
+/* ====== Zoom ====== */
+#zoom{position:fixed;inset:0;z-index:9000;display:none;background:rgba(0,0,0,0.95);overflow:hidden;touch-action:none}
+#zoom.on{display:block}
+#zoom-img{position:absolute;top:50%;left:50%;will-change:transform;transform-origin:center center;max-width:92vw;max-height:88vh}
+#zoom-close{position:fixed;top:14px;right:14px;width:42px;height:42px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);border-radius:50%;color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9001;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+#zoom-hint{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:11px;z-index:9001;pointer-events:none;letter-spacing:1px}
 
-/* Flip overlay - covers current page during flip */
-.m-flip{
-  position:absolute;top:0;left:0;width:100%;height:100%;
-  transform-style:preserve-3d;transform-origin:left center;
-  will-change:transform;pointer-events:none;
-  display:none;
-}
-.m-flip.active{display:flex;align-items:center;justify-content:center}
-.m-flip-front,.m-flip-back{
-  position:absolute;top:0;left:0;width:100%;height:100%;
-  display:flex;align-items:center;justify-content:center;
-  backface-visibility:hidden;-webkit-backface-visibility:hidden;
-}
-.m-flip-front img,.m-flip-back img{
-  max-width:100%;max-height:100%;width:auto;height:auto;
-  object-fit:contain;pointer-events:none;-webkit-user-drag:none;user-select:none;
-  display:block;
-}
-.m-flip-back{transform:rotateY(180deg)}
-
-/* Curl shadow */
-.m-curl{position:absolute;inset:0;pointer-events:none;opacity:0}
-.m-curl::before{content:'';position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0) 60%,rgba(0,0,0,0.08) 80%,rgba(0,0,0,0.22) 95%,rgba(0,0,0,0.3) 100%)}
-.m-curl::after{content:'';position:absolute;top:0;right:0;bottom:0;width:30%;background:linear-gradient(to left,rgba(255,255,255,0) 0%,rgba(255,255,255,0.04) 40%,rgba(255,255,255,0.09) 70%,rgba(255,255,255,0.12) 100%)}
-
-.m-book-shadow{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:80%;height:20px;background:radial-gradient(ellipse,rgba(0,0,0,0.4) 0%,transparent 70%);z-index:0;pointer-events:none}
-
-/* ====== ZOOM OVERLAY ====== */
-#zoom-overlay{position:fixed;inset:0;z-index:5000;display:none;background:rgba(0,0,0,0.92);overflow:hidden;touch-action:none}
-#zoom-overlay.active{display:block}
-#zoom-container{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);will-change:transform}
-#zoom-container.dragging{transition:none}
-#zoom-img{display:block;max-width:none;max-height:none;pointer-events:none;-webkit-user-drag:none;user-select:none}
-#zoom-close{position:fixed;top:16px;right:16px;width:44px;height:44px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);border-radius:50%;color:rgba(255,255,255,0.8);font-size:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5001;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:all 0.2s}
-#zoom-close:hover{background:rgba(255,255,255,0.25);border-color:rgba(255,255,255,0.5)}
-#zoom-hint{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.35);font-size:12px;z-index:5001;pointer-events:none;letter-spacing:1px}
-#zoom-reset{position:fixed;top:16px;left:16px;width:44px;height:44px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);border-radius:50%;color:rgba(255,255,255,0.8);font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:5001;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);transition:all 0.2s}
-#zoom-reset:hover{background:rgba(255,255,255,0.25)}
-
-/* ====== Shared UI ====== */
-.nav-btn{position:fixed;top:50%;transform:translateY(-50%);width:48px;height:48px;background:rgba(255,255,255,0.12);border:2px solid rgba(255,255,255,0.25);border-radius:50%;color:rgba(255,255,255,0.7);font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:300;transition:all 0.2s ease;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
-.nav-btn:hover{background:rgba(255,255,255,0.22);border-color:rgba(255,255,255,0.45);color:rgba(255,255,255,0.95)}
-.nav-btn:active{transform:translateY(-50%) scale(0.92)}
-.nav-btn:disabled{opacity:0.15;cursor:not-allowed}
-#prev-btn{left:16px}#next-btn{right:16px}
-#page-indicator{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.55);font-size:12px;letter-spacing:1px;z-index:300;background:rgba(0,0,0,0.4);padding:6px 18px;border-radius:20px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap;pointer-events:none}
-#title-bar{position:fixed;top:14px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:14px;letter-spacing:4px;z-index:300;pointer-events:none}
-#progress-bar{position:fixed;bottom:0;left:0;height:3px;background:linear-gradient(to right,#c9a96e,#e8c89a);width:0;z-index:400;transition:width 0.3s ease}
-
-#loading{position:fixed;inset:0;background:#0d0d0d;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.5s ease}
-#loading.hidden{opacity:0;pointer-events:none}
-#loading .spinner{width:40px;height:40px;border:3px solid rgba(255,255,255,0.1);border-top-color:rgba(255,255,255,0.5);border-radius:50%;animation:spin 0.8s linear infinite}
-#loading .text{margin-top:16px;color:rgba(255,255,255,0.4);font-size:14px;letter-spacing:2px}
+/* ====== UI ====== */
+.nav-btn{position:fixed;top:50%;transform:translateY(-50%);width:46px;height:46px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:50%;color:rgba(255,255,255,0.6);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:300;transition:all 0.2s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.nav-btn:hover{background:rgba(255,255,255,0.2);color:#fff}
+.nav-btn:disabled{opacity:0.1;cursor:default}
+#prev-btn{left:14px}#next-btn{right:14px}
+#indicator{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.5);font-size:11px;z-index:300;background:rgba(0,0,0,0.5);padding:5px 16px;border-radius:16px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);white-space:nowrap;pointer-events:none}
+#title{position:fixed;top:12px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.25);font-size:13px;letter-spacing:3px;z-index:300;pointer-events:none}
+#progress{position:fixed;bottom:0;left:0;height:3px;background:linear-gradient(to right,#c9a96e,#e8c89a);width:0;z-index:400;transition:width 0.3s ease}
+#loading{position:fixed;inset:0;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:9999;transition:opacity 0.4s ease}
+#loading.gone{opacity:0;pointer-events:none}
+.spinner{width:36px;height:36px;border:3px solid rgba(255,255,255,0.08);border-top-color:rgba(255,255,255,0.4);border-radius:50%;animation:spin 0.7s linear infinite}
+.load-text{margin-top:14px;color:rgba(255,255,255,0.3);font-size:13px;letter-spacing:2px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 @media(min-width:661px){
-  #book-container{display:block}#mobile-reader{display:none !important}.click-zone{display:block}
+  #desktop{display:flex}#mobile{display:none}.click-zone{display:block}.nav-btn{display:flex}
 }
 @media(max-width:660px){
-  #book-container{display:none !important}#mobile-reader{display:block !important}
-  #book-shadow{display:none}.nav-btn{display:none}.click-zone{display:none}
-  #page-indicator{font-size:10px;bottom:12px;padding:4px 14px}
-  #title-bar{font-size:12px;top:10px}
-  #zoom-close{width:40px;height:40px;font-size:20px}
-  #zoom-reset{display:none}
+  #desktop{display:none}#mobile{display:block}.click-zone{display:none}.nav-btn{display:none}
+  #indicator{font-size:10px;bottom:10px;padding:4px 12px}
+  #title{font-size:11px;top:8px}
 }
 </style>
 </head>
 <body>
 
-<div id="loading"><div class="spinner"></div><div class="text">正在加载电子书...</div></div>
-<div id="title-bar">《火种》</div>
+<div id="loading"><div class="spinner"></div><div class="load-text">正在加载...</div></div>
+<div id="title">《火种》</div>
 
 <!-- Desktop -->
-<div id="book-container">
-  <div id="book"></div>
-  <div id="book-shadow"></div>
+<div id="desktop">
+  <div id="book-container">
+    <div id="book"></div>
+    <div id="book-shadow"></div>
+  </div>
 </div>
 
 <!-- Mobile -->
-<div id="mobile-reader">
-  <div id="m-stage">
-    <div class="m-book-shadow"></div>
-    <div class="m-page" id="m-prev-page"><img src="" alt="" id="m-prev-img"></div>
-    <div class="m-page" id="m-curr-page"><img src="" alt="" id="m-curr-img"></div>
-    <div class="m-page" id="m-next-page"><img src="" alt="" id="m-next-img"></div>
-    <div class="m-flip" id="m-flip">
-      <div class="m-flip-front"><img src="" alt="" id="m-flip-front-img"><div class="m-curl" id="m-curl"></div></div>
-      <div class="m-flip-back"><img src="" alt="" id="m-flip-back-img"><div class="m-curl" style="transform:scaleX(-1)"></div></div>
-    </div>
+<div id="mobile">
+  <div id="m-viewport">
+    <div class="m-slide" id="slide-0"><img id="img-0" src="" alt=""></div>
+    <div class="m-slide hide" id="slide-1"><img id="img-1" src="" alt=""></div>
   </div>
 </div>
 
@@ -140,512 +92,394 @@ body{display:flex;flex-direction:column;align-items:center;justify-content:cente
 <div class="click-zone right" id="click-right"></div>
 <button class="nav-btn" id="prev-btn">&#10094;</button>
 <button class="nav-btn" id="next-btn">&#10095;</button>
-<div id="page-indicator">封面</div>
-<div id="progress-bar"></div>
+<div id="indicator">封面</div>
+<div id="progress"></div>
 
-<!-- Zoom overlay -->
-<div id="zoom-overlay">
-  <div id="zoom-reset" title="重置大小">1:1</div>
+<!-- Zoom -->
+<div id="zoom">
   <div id="zoom-close">&#10005;</div>
-  <div id="zoom-container"><img id="zoom-img" src="" alt=""></div>
-  <div id="zoom-hint">滚轮缩放 · 拖动查看 · ESC退出</div>
+  <img id="zoom-img" src="" alt="">
+  <div id="zoom-hint">双指缩放 · 拖动 · 点击关闭</div>
 </div>
 
 <script>
-var IMG_BASE='https://kiwions.github.io/huozhong-ebook/';
-function imgURL(n){return IMG_BASE+'page-'+String(n).padStart(2,'0')+'.jpg';}
+(function(){
+'use strict';
 
-var TOTAL_PAGES=31,TOTAL_LEAVES=15;
-var currentLeaf=0;
-var isMobile=window.innerWidth<=660;
-var book=document.getElementById('book');
-var prevBtn=document.getElementById('prev-btn'),nextBtn=document.getElementById('next-btn');
-var pageIndicator=document.getElementById('page-indicator'),progressBar=document.getElementById('progress-bar');
-var loadingEl=document.getElementById('loading');
-var chapterMap={1:'封面',2:'目录',3:'目录',4:'第一章·立土',5:'第一章·立土',6:'第一章·立土',7:'第一章·立土',8:'第一章·立土',9:'第一章·立土',10:'第二章·盛土',11:'第二章·盛土',12:'第二章·盛土',13:'第二章·盛土',14:'第二章·盛土',15:'第三章·折土',16:'第三章·折土',17:'第三章·折土',18:'第三章·折土',19:'第三章·折土',20:'第四章·守土',21:'第四章·守土',22:'第四章·守土',23:'第四章·守土',24:'第四章·守土',25:'第五章·生土',26:'第五章·生土',27:'第五章·生土',28:'第五章·生土',29:'第五章·生土',30:'第六章·归根',31:'第六章·归根'};
+var BASE = location.href.replace(/[^/]*$/, '');
+function pURL(n){ return BASE + 'page-' + (n<10?'0':'') + n + '.jpg'; }
+
+var TOTAL = 31;
+var isMobile = window.innerWidth <= 660;
+var chapters = {1:'封面',2:'目录',3:'目录',4:'第一章·立土',5:'第一章·立土',6:'第一章·立土',7:'第一章·立土',8:'第一章·立土',9:'第一章·立土',10:'第二章·盛土',11:'第二章·盛土',12:'第二章·盛土',13:'第二章·盛土',14:'第二章·盛土',15:'第三章·折土',16:'第三章·折土',17:'第三章·折土',18:'第三章·折土',19:'第三章·折土',20:'第四章·守土',21:'第四章·守土',22:'第四章·守土',23:'第四章·守土',24:'第四章·守土',25:'第五章·生土',26:'第五章·生土',27:'第五章·生土',28:'第五章·生土',29:'第五章·生土',30:'第六章·归根',31:'第六章·归根'};
+
+var loadingEl = document.getElementById('loading');
+var indicator = document.getElementById('indicator');
+var progress = document.getElementById('progress');
+var prevBtn = document.getElementById('prev-btn');
+var nextBtn = document.getElementById('next-btn');
 
 // ====== DESKTOP ======
-function buildBook(){
-  book.innerHTML='';
-  for(var i=0;i<TOTAL_LEAVES;i++){
-    var leaf=document.createElement('div');leaf.className='leaf';leaf.setAttribute('data-leaf',i);
-    var f=document.createElement('div');f.className='page front';f.setAttribute('data-page',2*i+1);
-    f.style.backgroundImage="url('"+imgURL(2*i+1)+"')";leaf.appendChild(f);
-    var b=document.createElement('div');b.className='page back';b.setAttribute('data-page',2*i+2);
-    b.style.backgroundImage="url('"+imgURL(2*i+2)+"')";leaf.appendChild(b);
+var LEAVES = 15;
+var leafIdx = 0;
+var book = document.getElementById('book');
+
+function buildDesktop(){
+  book.innerHTML = '';
+  for(var i=0;i<LEAVES;i++){
+    var leaf = document.createElement('div');
+    leaf.className = 'leaf';
+    leaf.dataset.leaf = i;
+    var f = document.createElement('div');
+    f.className = 'page front';
+    f.dataset.page = 2*i+1;
+    f.style.backgroundImage = 'url("'+pURL(2*i+1)+'")';
+    leaf.appendChild(f);
+    var b = document.createElement('div');
+    b.className = 'page back';
+    b.dataset.page = 2*i+2;
+    b.style.backgroundImage = 'url("'+pURL(2*i+2)+'")';
+    leaf.appendChild(b);
     book.appendChild(leaf);
   }
-  var sr=document.createElement('div');sr.className='right-page';sr.id='static-right';
-  sr.setAttribute('data-page','31');
-  sr.style.backgroundImage="url('"+imgURL(31)+"')";sr.style.display='none';book.appendChild(sr);
+  var sr = document.createElement('div');
+  sr.className = 'right-page';
+  sr.id = 'static-right';
+  sr.dataset.page = '31';
+  sr.style.backgroundImage = 'url("'+pURL(31)+'")';
+  sr.style.display = 'none';
+  book.appendChild(sr);
 }
-function updateZIndex(){var ls=book.querySelectorAll('.leaf');for(var i=0;i<ls.length;i++)ls[i].style.zIndex=i<currentLeaf?i+1:TOTAL_LEAVES-i;}
-function flipNext(){if(currentLeaf>=TOTAL_LEAVES)return;var l=book.querySelector('.leaf[data-leaf="'+currentLeaf+'"]');if(l){l.classList.add('flipped');currentLeaf++;updateZIndex();updateUI();}}
-function flipPrev(){if(currentLeaf<=0)return;currentLeaf--;var l=book.querySelector('.leaf[data-leaf="'+currentLeaf+'"]');if(l){l.classList.remove('flipped');updateZIndex();updateUI();}}
-function updateUI(){
-  if(isMobile)return;
-  var sr=document.getElementById('static-right');
-  if(currentLeaf===0){sr.style.display='none';pageIndicator.textContent='封面 · 第1页';}
-  else if(currentLeaf===TOTAL_LEAVES){sr.style.display='block';sr.style.zIndex=0;pageIndicator.textContent='第六章·归根 · 第30-31页';}
+
+function updateZ(){
+  var ls = book.querySelectorAll('.leaf');
+  for(var i=0;i<ls.length;i++) ls[i].style.zIndex = i<leafIdx ? i+1 : LEAVES-i;
+}
+
+function dNext(){
+  if(leafIdx>=LEAVES) return;
+  var l = book.querySelector('[data-leaf="'+leafIdx+'"]');
+  if(l) l.classList.add('flipped');
+  leafIdx++;
+  updateZ();
+  dUI();
+}
+
+function dPrev(){
+  if(leafIdx<=0) return;
+  leafIdx--;
+  var l = book.querySelector('[data-leaf="'+leafIdx+'"]');
+  if(l) l.classList.remove('flipped');
+  updateZ();
+  dUI();
+}
+
+function dUI(){
+  var sr = document.getElementById('static-right');
+  if(leafIdx===0){ if(sr) sr.style.display='none'; indicator.textContent='封面 · 第1页'; }
+  else if(leafIdx===LEAVES){ if(sr){sr.style.display='block';sr.style.zIndex=0;} indicator.textContent='第六章·归根 · 第30-31页'; }
   else{
-    sr.style.display='none';var lp=2*(currentLeaf-1)+2,rp=2*currentLeaf+1;
-    if(lp===2&&rp===3)pageIndicator.textContent='目录 · 第2-3页';
-    else{var lc=chapterMap[lp]||'',rc=chapterMap[rp]||'';pageIndicator.textContent=lc===rc?lc+' · 第'+lp+'-'+rp+'页':lc+'/'+rc+' · 第'+lp+'-'+rp+'页';}
+    if(sr) sr.style.display='none';
+    var lp=2*(leafIdx-1)+2, rp=2*leafIdx+1;
+    if(lp===2&&rp===3) indicator.textContent='目录 · 第2-3页';
+    else{var lc=chapters[lp]||'',rc=chapters[rp]||'';indicator.textContent=(lc===rc?lc:lc+'/'+rc)+' · 第'+lp+'-'+rp+'页';}
   }
-  progressBar.style.width=(currentLeaf/TOTAL_LEAVES*100)+'%';
-  prevBtn.disabled=currentLeaf===0;nextBtn.disabled=currentLeaf>=TOTAL_LEAVES;
+  progress.style.width=(leafIdx/LEAVES*100)+'%';
+  prevBtn.disabled=leafIdx===0;
+  nextBtn.disabled=leafIdx>=LEAVES;
 }
-document.getElementById('book-container').addEventListener('dblclick', function(e) {
-  var page = e.target.closest('.page, .right-page');
-  if (!page) return;
-  var pageNum = parseInt(page.getAttribute('data-page') || '1', 10);
-  openZoom(pageNum);
-});
-if(!isMobile){
-  nextBtn.onclick=flipNext;prevBtn.onclick=flipPrev;
-  document.getElementById('click-right').onclick=flipNext;
-  document.getElementById('click-left').onclick=flipPrev;
-}
-var dtX=0,dtY=0;
-document.addEventListener('touchstart',function(e){if(!isMobile){dtX=e.touches[0].clientX;dtY=e.touches[0].clientY;}},{passive:true});
-document.addEventListener('touchend',function(e){
-  if(isMobile)return;
-  var dx=e.changedTouches[0].clientX-dtX,dy=e.changedTouches[0].clientY-dtY;
-  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx<0)flipNext();else flipPrev();}
-},{passive:true});
-document.addEventListener('keydown',function(e){
-  if(e.key==='Escape'){closeZoom();return;}
-  if(isMobile)return;
-  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();flipNext();}
-  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();flipPrev();}
-  else if(e.key==='Home'){while(currentLeaf>0)flipPrev();}
-  else if(e.key==='End'){while(currentLeaf<TOTAL_LEAVES)flipNext();}
-});
-var wl=false;
-document.addEventListener('wheel',function(e){
-  if(isMobile)return;if(wl)return;
-  if(Math.abs(e.deltaY)<30&&Math.abs(e.deltaX)<30)return;
-  if(e.deltaY>0||e.deltaX>0)flipNext();else flipPrev();
-  wl=true;setTimeout(function(){wl=false;},500);
-},{passive:true});
 
-// ====== ZOOM OVERLAY ======
-var zoomOverlay=document.getElementById('zoom-overlay');
-var zoomContainer=document.getElementById('zoom-container');
-var zoomImg=document.getElementById('zoom-img');
-var zoomClose=document.getElementById('zoom-close');
-var zoomReset=document.getElementById('zoom-reset');
-var zScale=1,zX=0,zY=0;
-var zDragging=false,zDragStartX=0,zDragStartY=0;
-var zInitDist=0,zInitScale=1,zInitX=0,zInitY=0;
-function applyZoomTransform(){
-  zoomContainer.style.transform='translate(-50%,-50%) translate('+zX+'px,'+zY+'px) scale('+zScale+')';
-}
-function openZoom(pageNum){
-  zoomImg.src=imgURL(pageNum);
-  zoomOverlay.classList.add('active');
-  zScale=1;zX=0;zY=0;
-  requestAnimationFrame(function(){
-    var rect=zoomImg.getBoundingClientRect();
-    var vw=window.innerWidth,vh=window.innerHeight;
-    if(rect.width>vw*0.92||rect.height>vh*0.88){
-      zScale=Math.min((vw*0.92)/rect.width,(vh*0.88)/rect.height);
-    }
-    applyZoomTransform();
-  });
-}
-function closeZoom(){zoomOverlay.classList.remove('active');}
-zoomClose.onclick=closeZoom;
-zoomReset.onclick=function(){zScale=1;zX=0;zY=0;applyZoomTransform();};
-zoomOverlay.addEventListener('click',function(e){if(e.target===zoomOverlay)closeZoom();});
-zoomOverlay.addEventListener('mousedown',function(e){
-  if(e.target===zoomClose||e.target===zoomReset)return;
-  zDragging=true;zDragStartX=e.clientX-zX;zDragStartY=e.clientY-zY;
-  zoomContainer.classList.add('dragging');e.preventDefault();
+// Desktop double-click zoom
+document.getElementById('desktop').addEventListener('dblclick', function(e){
+  var pg = e.target.closest('.page, .right-page');
+  if(!pg) return;
+  openZoom(parseInt(pg.dataset.page||'1',10));
 });
-document.addEventListener('mousemove',function(e){
-  if(zDragging){zX=e.clientX-zDragStartX;zY=e.clientY-zDragStartY;applyZoomTransform();}
-});
-document.addEventListener('mouseup',function(){
-  if(zDragging){zDragging=false;zoomContainer.classList.remove('dragging');}
-});
-zoomOverlay.addEventListener('wheel',function(e){
-  e.preventDefault();
-  var delta=e.deltaY>0?0.9:1.1;
-  var newScale=Math.max(0.2,Math.min(15,zScale*delta));
-  var rect=zoomOverlay.getBoundingClientRect();
-  var cx=e.clientX-rect.left-rect.width/2;
-  var cy=e.clientY-rect.top-rect.height/2;
-  var ratio=newScale/zScale;
-  zX=cx-ratio*(cx-zX);zY=cy-ratio*(cy-zY);
-  zScale=newScale;applyZoomTransform();
-},{passive:false});
-zoomOverlay.addEventListener('touchstart',function(e){
-  if(e.touches.length===1){
-    zDragging=true;zDragStartX=e.touches[0].clientX-zX;zDragStartY=e.touches[0].clientY-zY;
-    zoomContainer.classList.add('dragging');
-  }else if(e.touches.length===2){
-    zDragging=false;
-    var dx=e.touches[0].clientX-e.touches[1].clientX;
-    var dy=e.touches[0].clientY-e.touches[1].clientY;
-    zInitDist=Math.max(1,Math.sqrt(dx*dx+dy*dy));
-    zInitScale=zScale;zInitX=zX;zInitY=zY;
-  }
-},{passive:true});
-zoomOverlay.addEventListener('touchmove',function(e){
-  e.preventDefault();
-  if(e.touches.length===1&&zDragging){
-    zX=e.touches[0].clientX-zDragStartX;zY=e.touches[0].clientY-zDragStartY;
-    applyZoomTransform();
-  }else if(e.touches.length===2&&zInitDist>0){
-    var dx=e.touches[0].clientX-e.touches[1].clientX;
-    var dy=e.touches[0].clientY-e.touches[1].clientY;
-    var dist=Math.sqrt(dx*dx+dy*dy);
-    zScale=Math.max(0.2,Math.min(10,zInitScale*(dist/zInitDist)));
-    zX=zInitX;zY=zInitY;applyZoomTransform();
-  }
-},{passive:false});
-zoomOverlay.addEventListener('touchend',function(e){
-  if(e.touches.length===0){zDragging=false;zoomContainer.classList.remove('dragging');zInitDist=0;}
-},{passive:true});
 
-// ====== MOBILE: 3-page architecture, zero src changes during flip ======
-var mStage=document.getElementById('m-stage');
-var mCur=0;
-var mBusy=false;
+// ====== MOBILE: Simple slide reader ======
+var mPage = 0; // 0-based
+var mBusy = false;
+var slide0 = document.getElementById('slide-0');
+var slide1 = document.getElementById('slide-1');
+var img0 = document.getElementById('img-0');
+var img1 = document.getElementById('img-1');
+var activeSlide = slide0;
+var inactiveSlide = slide1;
+var activeImg = img0;
+var inactiveImg = img1;
 
-var mPrevPage=document.getElementById('m-prev-page');
-var mCurrPage=document.getElementById('m-curr-page');
-var mNextPage=document.getElementById('m-next-page');
-var mPrevImg=document.getElementById('m-prev-img');
-var mCurrImg=document.getElementById('m-curr-img');
-var mNextImg=document.getElementById('m-next-img');
-var mFlipEl=document.getElementById('m-flip');
-var mFlipFrontImg=document.getElementById('m-flip-front-img');
-var mFlipBackImg=document.getElementById('m-flip-back-img');
-var mCurlEl=document.getElementById('m-curl');
+function mUI(){
+  var pn = mPage+1;
+  indicator.textContent = chapters[pn]+' · 第'+pn+'页 / 共'+TOTAL+'页';
+  progress.style.width = (pn/TOTAL*100)+'%';
+}
 
 function mInit(){
-  // Load 3 pages: prev (none), current (page 1), next (page 2)
-  mCurrImg.src=imgURL(1);
-  mNextImg.src=imgURL(2);
-  
-  // Show only current page
-  mPrevPage.style.opacity='0';
-  mCurrPage.style.opacity='1';
-  mNextPage.style.opacity='0';
-  
-  mCurrPage.style.zIndex=10;
-  mPrevPage.style.zIndex=5;
-  mNextPage.style.zIndex=5;
-  
-  mFlipEl.classList.remove('active');
-  mFlipEl.style.transform='rotateY(0deg)';
-  mCurlEl.style.opacity='0';
-  
-  mUpdateUI();
+  activeImg.src = pURL(1);
+  // Preload next
+  inactiveImg.src = pURL(2);
+  mUI();
 }
 
-function mUpdateUI(){
-  var pn=mCur+1;
-  pageIndicator.textContent=chapterMap[pn]+' · 第'+pn+'页 / 共'+TOTAL_PAGES+'页';
-  progressBar.style.width=(pn/TOTAL_PAGES*100)+'%';
+function mGoNext(){
+  if(mBusy||mPage>=TOTAL-1) return;
+  mBusy = true;
+  mPage++;
+  // Load next page into inactive slide
+  inactiveImg.src = pURL(mPage+1);
+  // Slide: active goes left, inactive comes from right
+  activeSlide.classList.add('left');
+  inactiveSlide.className = 'm-slide';
+  // After transition
+  setTimeout(function(){
+    // Swap
+    var tmp = activeSlide;
+    activeSlide = inactiveSlide;
+    inactiveSlide = tmp;
+    var tmpI = activeImg;
+    activeImg = inactiveImg;
+    inactiveImg = tmpI;
+    // Reset old active (now inactive)
+    inactiveSlide.className = 'm-slide hide';
+    // Preload next
+    if(mPage+1<TOTAL) inactiveImg.src = pURL(mPage+2);
+    mUI();
+    mBusy = false;
+  }, 360);
 }
 
-function mNext(){
-  if(mBusy||mCur>=TOTAL_PAGES-1)return;
-  mBusy=true;
-  
-  var nextNum=mCur+2; // 1-based next page
-  
-  // Prepare flip: front = current page, back = next page
-  mFlipFrontImg.src=mCurrImg.src;  // reuse already-loaded image URL
-  mFlipBackImg.src=imgURL(nextNum);
-  
-  // Show flip layer on top
-  mFlipEl.classList.add('active');
-  mFlipEl.style.transition='none';
-  mFlipEl.style.transform='rotateY(0deg)';
-  mCurlEl.style.opacity='0';
-  
-  void mFlipEl.offsetWidth;
-  
-  // Animate flip
-  mCurlEl.style.opacity='1';
-  mFlipEl.style.transition='transform 0.5s cubic-bezier(0.22,0.61,0.36,1)';
-  mFlipEl.style.transform='rotateY(-180deg)';
-  
-  var done=false;
-  var onEnd=function(e){
-    if(e.propertyName!=='transform'||done)return;
-    done=true;
-    mFlipEl.removeEventListener('transitionend',onEnd);
-    
-    // Swap: current page becomes next page
-    mCur++;
-    
-    // Update 3-page window
-    // new current = old next, new next = page after that
-    mCurrImg.src=imgURL(mCur+1);
-    if(mCur+1<TOTAL_PAGES){
-      mNextImg.src=imgURL(mCur+2);
-    }
-    // prev page (for back navigation)
-    if(mCur>0){
-      mPrevImg.src=imgURL(mCur);
-    }
-    
-    // Hide flip layer (current page already shows correct content)
-    mFlipEl.style.transition='none';
-    mFlipEl.style.transform='rotateY(0deg)';
-    mFlipEl.classList.remove('active');
-    mCurlEl.style.opacity='0';
-    
-    mUpdateUI();
-    mBusy=false;
-  };
-  mFlipEl.addEventListener('transitionend',onEnd);
+function mGoPrev(){
+  if(mBusy||mPage<=0) return;
+  mBusy = true;
+  mPage--;
+  // Load prev page into inactive slide
+  inactiveImg.src = pURL(mPage+1);
+  // Slide: active goes right, inactive comes from left
+  activeSlide.classList.add('right');
+  inactiveSlide.className = 'm-slide';
+  setTimeout(function(){
+    var tmp = activeSlide;
+    activeSlide = inactiveSlide;
+    inactiveSlide = tmp;
+    var tmpI = activeImg;
+    activeImg = inactiveImg;
+    inactiveImg = tmpI;
+    inactiveSlide.className = 'm-slide hide';
+    if(mPage>0) inactiveImg.src = pURL(mPage);
+    mUI();
+    mBusy = false;
+  }, 360);
 }
 
-function mPrev(){
-  if(mBusy||mCur<=0)return;
-  mBusy=true;
-  
-  var prevNum=mCur; // 1-based prev page
-  
-  // Prepare flip: front = prev page, back = current page
-  mFlipFrontImg.src=imgURL(prevNum);
-  mFlipBackImg.src=imgURL(mCur+1);
-  
-  // Show flip layer, starting from -180deg
-  mFlipEl.classList.add('active');
-  mFlipEl.style.transition='none';
-  mFlipEl.style.transform='rotateY(-180deg)';
-  mCurlEl.style.opacity='1';
-  
-  void mFlipEl.offsetWidth;
-  
-  // Animate forward to 0deg
-  mFlipEl.style.transition='transform 0.5s cubic-bezier(0.22,0.61,0.36,1)';
-  mFlipEl.style.transform='rotateY(0deg)';
-  
-  var done=false;
-  var onEnd=function(e){
-    if(e.propertyName!=='transform'||done)return;
-    done=true;
-    mFlipEl.removeEventListener('transitionend',onEnd);
-    
-    // Swap: current page becomes prev page
-    mCur--;
-    
-    // Update 3-page window
-    mCurrImg.src=imgURL(mCur+1);
-    if(mCur>0){
-      mPrevImg.src=imgURL(mCur);
-    }
-    if(mCur+1<TOTAL_PAGES){
-      mNextImg.src=imgURL(mCur+2);
-    }
-    
-    // Hide flip layer
-    mFlipEl.style.transition='none';
-    mFlipEl.style.transform='rotateY(0deg)';
-    mFlipEl.classList.remove('active');
-    mCurlEl.style.opacity='0';
-    
-    mUpdateUI();
-    mBusy=false;
-  };
-  mFlipEl.addEventListener('transitionend',onEnd);
-}
+// Touch handling
+var tsx=0, tsy=0, tmoved=false, ttime=0;
 
-// ====== Touch handling ======
-var touch={mode:'idle',startX:0,startY:0,lastX:0,lastY:0,moved:false,startTime:0,dir:0};
-
-mStage.addEventListener('touchstart',function(e){
-  if(mBusy)return;
-  var t=e.touches;
+function onTouchStart(e){
+  if(mBusy) return;
+  var t = e.touches;
   if(t.length===1){
-    touch.startX=touch.lastX=t[0].clientX;
-    touch.startY=touch.lastY=t[0].clientY;
-    touch.startTime=Date.now();
-    touch.moved=false;touch.dir=0;
-    touch.mode='drag';
-  }else if(t.length===2){
+    tsx=t[0].clientX; tsy=t[0].clientY; tmoved=false; ttime=Date.now();
+  } else if(t.length===2){
     e.preventDefault();
-    touch.mode='pinch';
-    openZoom(mCur+1);
-  }
-},{passive:true});
-
-mStage.addEventListener('touchmove',function(e){
-  if(mBusy)return;
-  var t=e.touches;
-  if(t.length===1&&touch.mode==='drag'){
-    var dx=t[0].clientX-touch.startX;
-    var dy=t[0].clientY-touch.startY;
-    if(Math.abs(dx)>6)touch.moved=true;
-    if(Math.abs(dx)>Math.abs(dy)*1.2){
-      e.preventDefault();
-      var w=window.innerWidth;
-      var progress=Math.max(-1,Math.min(1,dx/w));
-      
-      if(progress<0){
-        if(mCur>=TOTAL_PAGES-1)return;
-        touch.dir=1;
-        // Prepare flip if not active
-        if(!mFlipEl.classList.contains('active')){
-          mFlipFrontImg.src=mCurrImg.src;
-          mFlipBackImg.src=imgURL(mCur+2);
-          mFlipEl.classList.add('active');
-          mFlipEl.style.transition='none';
-          mFlipEl.style.transform='rotateY(0deg)';
-          void mFlipEl.offsetWidth;
-        }
-        var angle=progress*180;
-        mFlipEl.style.transform='rotateY('+angle+'deg)';
-        mCurlEl.style.opacity=Math.min(1,Math.abs(progress)*1.5);
-      }else{
-        if(mCur<=0)return;
-        touch.dir=-1;
-        if(!mFlipEl.classList.contains('active')){
-          mFlipFrontImg.src=imgURL(mCur);
-          mFlipBackImg.src=imgURL(mCur+1);
-          mFlipEl.classList.add('active');
-          mFlipEl.style.transition='none';
-          mFlipEl.style.transform='rotateY(-180deg)';
-          void mFlipEl.offsetWidth;
-        }
-        var angle2=-180+progress*180;
-        mFlipEl.style.transform='rotateY('+angle2+'deg)';
-        mCurlEl.style.opacity=Math.min(1,(1-progress)*1.5);
-      }
-    }
-    touch.lastX=t[0].clientX;touch.lastY=t[0].clientY;
-  }
-},{passive:false});
-
-mStage.addEventListener('touchend',function(e){
-  if(mBusy)return;
-  if(touch.mode==='drag'&&touch.moved){
-    var dx=touch.lastX-touch.startX;
-    var dy=touch.lastY-touch.startY;
-    var dt=Date.now()-touch.startTime;
-    if(Math.abs(dx)>Math.abs(dy)*1.2){
-      var velocity=dx/dt;
-      var fast=Math.abs(velocity)>0.3;
-      var far=Math.abs(dx)>window.innerWidth*0.25;
-      if((fast||far)&&touch.dir===1&&mCur<TOTAL_PAGES-1){
-        mNext();
-      }else if((fast||far)&&touch.dir===-1&&mCur>0){
-        mPrev();
-      }else{
-        mSnapBack(touch.dir);
-      }
-    }else{
-      mSnapBack(0);
-    }
-  }
-  touch.mode='idle';
-},{passive:true});
-
-function mSnapBack(dir){
-  if(!mFlipEl.classList.contains('active'))return;
-  mFlipEl.style.transition='transform 0.25s ease-out';
-  if(dir===1){
-    mFlipEl.style.transform='rotateY(0deg)';
-    mCurlEl.style.opacity='0';
-    setTimeout(function(){
-      mFlipEl.classList.remove('active');
-      mFlipEl.style.transition='none';
-      mFlipEl.style.transform='rotateY(0deg)';
-    },260);
-  }else if(dir===-1){
-    mFlipEl.style.transform='rotateY(-180deg)';
-    setTimeout(function(){
-      mFlipEl.classList.remove('active');
-      mFlipEl.style.transition='none';
-      mFlipEl.style.transform='rotateY(0deg)';
-      mCurlEl.style.opacity='0';
-    },260);
-  }else{
-    mFlipEl.classList.remove('active');
-    mCurlEl.style.opacity='0';
+    openZoom(mPage+1);
   }
 }
+
+function onTouchMove(e){
+  var t = e.touches;
+  if(t.length===1){
+    var dx = t[0].clientX - tsx;
+    var dy = t[0].clientY - tsy;
+    if(Math.abs(dx)>8) tmoved=true;
+  }
+}
+
+function onTouchEnd(e){
+  if(mBusy) return;
+  if(!tmoved) return; // it was a tap, not a swipe
+  var dx = e.changedTouches[0].clientX - tsx;
+  var dy = e.changedTouches[0].clientY - tsy;
+  var dt = Date.now() - ttime;
+  if(Math.abs(dx) > Math.abs(dy)*1.2 && Math.abs(dx) > 40){
+    if(dx < 0) mGoNext();
+    else mGoPrev();
+  }
+}
+
+var mViewport = document.getElementById('m-viewport');
+mViewport.addEventListener('touchstart', onTouchStart, {passive:true});
+mViewport.addEventListener('touchmove', onTouchMove, {passive:true});
+mViewport.addEventListener('touchend', onTouchEnd, {passive:true});
 
 // Double-tap to zoom
-var mLastTap=0;
-mStage.addEventListener('click',function(e){
-  if(mBusy||touch.moved)return;
-  var now=Date.now();
-  if(now-mLastTap<350){
-    openZoom(mCur+1);
-    mLastTap=0;
-  }else{mLastTap=now;}
-});
-
-// Tap zones
-document.addEventListener('click',function(e){
-  if(isMobile&&!mBusy){
-    var x=e.clientX;
-    if(x<window.innerWidth*0.2){mPrev();}
-    else if(x>window.innerWidth*0.8){mNext();}
+var lastTap = 0;
+mViewport.addEventListener('click', function(){
+  if(tmoved) return;
+  var now = Date.now();
+  if(now - lastTap < 350){
+    openZoom(mPage+1);
+    lastTap = 0;
+  } else {
+    lastTap = now;
   }
 });
 
-// Resize
-var rt=null;
-window.addEventListener('resize',function(){
-  if(rt)clearTimeout(rt);
-  rt=setTimeout(function(){
-    var nm=window.innerWidth<=660;
-    if(nm!==isMobile){
-      isMobile=nm;
-      if(isMobile){
-        document.getElementById('book-container').style.display='none';
-        document.getElementById('mobile-reader').style.display='block';
-        mInit();
-      }else{
-        document.getElementById('book-container').style.display='block';
-        document.getElementById('mobile-reader').style.display='none';
-        updateUI();
-      }
-    }
-  },300);
+// Tap zones for mobile
+document.addEventListener('click', function(e){
+  if(!isMobile || mBusy) return;
+  if(tmoved) return;
+  var x = e.clientX;
+  if(x < window.innerWidth*0.2) mGoPrev();
+  else if(x > window.innerWidth*0.8) mGoNext();
 });
 
-document.addEventListener('gesturestart',function(e){e.preventDefault();},{passive:false});
+// ====== Zoom ======
+var zoom = document.getElementById('zoom');
+var zoomImg = document.getElementById('zoom-img');
+var zoomClose = document.getElementById('zoom-close');
+var zScale=1, zX=0, zY=0;
+var zDrag=false, zSX=0, zSY=0;
+var zID=0, zIS=1, zIX=0, zIY=0;
 
-// Init
-if(isMobile){mInit();}
-else{buildBook();updateZIndex();updateUI();}
-
-// Wait for at least first 2 images to load
-var loaded=0;
-function checkLoad(){
-  loaded++;
-  if(loaded>=2){
-    loadingEl.classList.add('hidden');
-    setTimeout(function(){loadingEl.remove();},500);
-  }
+function zApply(){
+  zoomImg.style.transform = 'translate(-50%,-50%) translate('+zX+'px,'+zY+'px) scale('+zScale+')';
 }
-if(isMobile){
-  mCurrImg.onload=checkLoad;
-  mNextImg.onload=checkLoad;
-  // Fallback timeout
-  setTimeout(function(){
-    if(!loadingEl.classList.contains('hidden')){
-      loadingEl.classList.add('hidden');
-      setTimeout(function(){loadingEl.remove();},500);
+
+function openZoom(n){
+  zoomImg.src = pURL(n);
+  zoom.classList.add('on');
+  zScale=1; zX=0; zY=0;
+  zoomImg.onload = function(){
+    var w = zoomImg.naturalWidth || zoomImg.width;
+    var h = zoomImg.naturalHeight || zoomImg.height;
+    var vw = window.innerWidth, vh = window.innerHeight;
+    if(w > vw*0.92 || h > vh*0.88){
+      zScale = Math.min(vw*0.92/w, vh*0.88/h);
     }
-  },3000);
-}else{
-  setTimeout(function(){
-    loadingEl.classList.add('hidden');
-    setTimeout(function(){loadingEl.remove();},500);
-  },800);
+    zApply();
+  };
 }
+
+function closeZoom(){ zoom.classList.remove('on'); }
+
+zoomClose.onclick = closeZoom;
+zoom.addEventListener('click', function(e){ if(e.target===zoom) closeZoom(); });
+
+zoom.addEventListener('mousedown', function(e){
+  if(e.target===zoomClose) return;
+  zDrag=true; zSX=e.clientX-zX; zSY=e.clientY-zY; e.preventDefault();
+});
+document.addEventListener('mousemove', function(e){ if(zDrag){zX=e.clientX-zSX; zY=e.clientY-zSY; zApply();} });
+document.addEventListener('mouseup', function(){ zDrag=false; });
+
+zoom.addEventListener('wheel', function(e){
+  e.preventDefault();
+  var ns = Math.max(0.2, Math.min(15, zScale*(e.deltaY>0?0.9:1.1)));
+  var r = zoom.getBoundingClientRect();
+  var cx=e.clientX-r.left-r.width/2, cy=e.clientY-r.top-r.height/2;
+  var ratio = ns/zScale;
+  zX = cx-ratio*(cx-zX); zY = cy-ratio*(cy-zY);
+  zScale = ns; zApply();
+}, {passive:false});
+
+zoom.addEventListener('touchstart', function(e){
+  if(e.touches.length===1){
+    zDrag=true; zSX=e.touches[0].clientX-zX; zSY=e.touches[0].clientY-zY;
+  } else if(e.touches.length===2){
+    zDrag=false;
+    var dx=e.touches[0].clientX-e.touches[1].clientX;
+    var dy=e.touches[0].clientY-e.touches[1].clientY;
+    zID=Math.max(1,Math.sqrt(dx*dx+dy*dy));
+    zIS=zScale; zIX=zX; zIY=zY;
+  }
+}, {passive:true});
+
+zoom.addEventListener('touchmove', function(e){
+  e.preventDefault();
+  if(e.touches.length===1 && zDrag){
+    zX=e.touches[0].clientX-zSX; zY=e.touches[0].clientY-zSY; zApply();
+  } else if(e.touches.length===2 && zID>0){
+    var dx=e.touches[0].clientX-e.touches[1].clientX;
+    var dy=e.touches[0].clientY-e.touches[1].clientY;
+    var d=Math.sqrt(dx*dx+dy*dy);
+    zScale=Math.max(0.2,Math.min(10,zIS*(d/zID)));
+    zX=zIX; zY=zIY; zApply();
+  }
+}, {passive:false});
+
+zoom.addEventListener('touchend', function(e){
+  if(e.touches.length===0){ zDrag=false; zID=0; }
+}, {passive:true});
+
+// ====== Keyboard ======
+document.addEventListener('keydown', function(e){
+  if(e.key==='Escape'){ closeZoom(); return; }
+  if(isMobile) return;
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); dNext(); }
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); dPrev(); }
+  else if(e.key==='Home'){ while(leafIdx>0) dPrev(); }
+  else if(e.key==='End'){ while(leafIdx<LEAVES) dNext(); }
+});
+
+// Desktop wheel
+var wl=false;
+document.addEventListener('wheel', function(e){
+  if(isMobile) return;
+  if(wl) return;
+  if(Math.abs(e.deltaY)<30 && Math.abs(e.deltaX)<30) return;
+  if(e.deltaY>0||e.deltaX>0) dNext(); else dPrev();
+  wl=true; setTimeout(function(){wl=false;},500);
+}, {passive:true});
+
+// Desktop touch
+var dtsx=0,dtsy=0;
+document.addEventListener('touchstart', function(e){
+  if(!isMobile){ dtsx=e.touches[0].clientX; dtsy=e.touches[0].clientY; }
+}, {passive:true});
+document.addEventListener('touchend', function(e){
+  if(isMobile) return;
+  var dx=e.changedTouches[0].clientX-dtsx, dy=e.changedTouches[0].clientY-dtsy;
+  if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){
+    if(dx<0) dNext(); else dPrev();
+  }
+}, {passive:true});
+
+// Prevent WeChat gesture
+document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+
+// ====== Init ======
+if(!isMobile){
+  // Desktop
+  document.getElementById('click-right').onclick = dNext;
+  document.getElementById('click-left').onclick = dPrev;
+  prevBtn.onclick = dPrev;
+  nextBtn.onclick = dNext;
+  buildDesktop();
+  updateZ();
+  dUI();
+  // Hide loading after a short delay
+  setTimeout(function(){
+    loadingEl.classList.add('gone');
+    setTimeout(function(){ loadingEl.remove(); }, 400);
+  }, 600);
+} else {
+  // Mobile
+  mInit();
+  // Hide loading when first image loads
+  activeImg.onload = function(){
+    loadingEl.classList.add('gone');
+    setTimeout(function(){ loadingEl.remove(); }, 400);
+  };
+  // Fallback: hide after 5s
+  setTimeout(function(){
+    if(!loadingEl.classList.contains('gone')){
+      loadingEl.classList.add('gone');
+      setTimeout(function(){ loadingEl.remove(); }, 400);
+    }
+  }, 5000);
+}
+
+})();
 </script>
 </body>
 </html>
