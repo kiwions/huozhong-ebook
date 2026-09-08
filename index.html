@@ -3,31 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<meta name="format-detection" content="telephone=no">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <title>《火种》</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
-html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html{-webkit-text-size-adjust:100%}
 body{background:#0a0a0a;overflow:hidden;font-family:system-ui,-apple-system,sans-serif}
 
-/* ====== DESKTOP: 3D flip book ====== */
+/* DESKTOP */
 #desktop{display:none;width:100%;height:100vh;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#2a2a2a 0%,#0d0d0d 100%)}
 #book-container{perspective:2500px;position:relative}
 #book{position:relative;width:800px;height:1134px;transform-style:preserve-3d}
 #book::before{content:'';position:absolute;left:50%;top:0;width:4px;height:100%;background:linear-gradient(to right,transparent,rgba(0,0,0,0.15) 40%,rgba(0,0,0,0.25) 50%,rgba(0,0,0,0.15) 60%,transparent);transform:translateX(-50%);z-index:100;pointer-events:none}
 .leaf{position:absolute;top:0;left:50%;width:400px;height:1134px;transform-origin:left center;transform-style:preserve-3d;transition:transform 0.7s cubic-bezier(0.42,0.05,0.3,1)}
 .leaf.flipped{transform:rotateY(-180deg)}
-.page{position:absolute;top:0;left:0;width:100%;height:100%;background-size:cover;background-position:center;background-repeat:no-repeat;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:hidden}
+.page{position:absolute;top:0;left:0;width:100%;height:100%;overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .page.front{border-radius:0 4px 4px 0;box-shadow:inset -6px 0 12px -6px rgba(0,0,0,0.3)}
 .page.back{transform:rotateY(180deg);border-radius:4px 0 0 4px;box-shadow:inset 6px 0 12px -6px rgba(0,0,0,0.3)}
-.right-page{position:absolute;top:0;left:50%;width:400px;height:1134px;background-size:cover;background-position:center;background-repeat:no-repeat;border-radius:0 4px 4px 0;pointer-events:none;box-shadow:inset -6px 0 12px -6px rgba(0,0,0,0.3)}
+.page img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
+.right-page{position:absolute;top:0;left:50%;width:400px;height:1134px;border-radius:0 4px 4px 0;pointer-events:none;box-shadow:inset -6px 0 12px -6px rgba(0,0,0,0.3);overflow:hidden}
+.right-page img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none;-webkit-user-drag:none}
 #book-shadow{position:absolute;bottom:-30px;left:50%;transform:translateX(-50%);width:720px;height:30px;background:radial-gradient(ellipse,rgba(0,0,0,0.5) 0%,transparent 70%);z-index:0}
 .click-zone{position:fixed;top:0;height:100%;width:12%;z-index:200;cursor:pointer;opacity:0}
 .click-zone.left{left:0}.click-zone.right{right:0}
 
-/* ====== MOBILE: Slide reader ====== */
+/* MOBILE */
 #mobile{display:none;position:fixed;inset:0;background:#0a0a0a;overflow:hidden;touch-action:none}
 #m-viewport{position:relative;width:100%;height:100%;overflow:hidden}
 .m-slide{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;transition:transform 0.35s cubic-bezier(0.25,0.46,0.45,0.94),opacity 0.35s ease;will-change:transform,opacity;transform:translateZ(0)}
@@ -36,14 +35,14 @@ body{background:#0a0a0a;overflow:hidden;font-family:system-ui,-apple-system,sans
 .m-slide.right{transform:translateX(100%)}
 .m-slide.hide{opacity:0;pointer-events:none}
 
-/* ====== Zoom ====== */
+/* ZOOM */
 #zoom{position:fixed;inset:0;z-index:9000;display:none;background:rgba(0,0,0,0.95);overflow:hidden;touch-action:none}
 #zoom.on{display:block}
 #zoom-img{position:absolute;top:50%;left:50%;will-change:transform;transform-origin:center center;max-width:92vw;max-height:88vh}
 #zoom-close{position:fixed;top:14px;right:14px;width:42px;height:42px;background:rgba(255,255,255,0.15);border:2px solid rgba(255,255,255,0.3);border-radius:50%;color:#fff;font-size:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:9001;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 #zoom-hint{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);color:rgba(255,255,255,0.3);font-size:11px;z-index:9001;pointer-events:none;letter-spacing:1px}
 
-/* ====== UI ====== */
+/* UI */
 .nav-btn{position:fixed;top:50%;transform:translateY(-50%);width:46px;height:46px;background:rgba(255,255,255,0.1);border:2px solid rgba(255,255,255,0.2);border-radius:50%;color:rgba(255,255,255,0.6);font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:300;transition:all 0.2s;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .nav-btn:hover{background:rgba(255,255,255,0.2);color:#fff}
 .nav-btn:disabled{opacity:0.1;cursor:default}
@@ -72,7 +71,6 @@ body{background:#0a0a0a;overflow:hidden;font-family:system-ui,-apple-system,sans
 <div id="loading"><div class="spinner"></div><div class="load-text">正在加载...</div></div>
 <div id="title">《火种》</div>
 
-<!-- Desktop -->
 <div id="desktop">
   <div id="book-container">
     <div id="book"></div>
@@ -80,7 +78,6 @@ body{background:#0a0a0a;overflow:hidden;font-family:system-ui,-apple-system,sans
   </div>
 </div>
 
-<!-- Mobile -->
 <div id="mobile">
   <div id="m-viewport">
     <div class="m-slide" id="slide-0"><img id="img-0" src="" alt=""></div>
@@ -95,7 +92,6 @@ body{background:#0a0a0a;overflow:hidden;font-family:system-ui,-apple-system,sans
 <div id="indicator">封面</div>
 <div id="progress"></div>
 
-<!-- Zoom -->
 <div id="zoom">
   <div id="zoom-close">&#10005;</div>
   <img id="zoom-img" src="" alt="">
@@ -106,379 +102,256 @@ body{background:#0a0a0a;overflow:hidden;font-family:system-ui,-apple-system,sans
 (function(){
 'use strict';
 
-var BASE = location.href.replace(/[^/]*$/, '');
+// Robust base URL: always ends with /
+var path = location.pathname;
+if(path.indexOf('.') > path.lastIndexOf('/')){
+  // Has a filename like /index.html, strip it
+  path = path.substring(0, path.lastIndexOf('/') + 1);
+} else if(!path.endsWith('/')){
+  // No trailing slash, add one
+  path = path + '/';
+}
+var BASE = location.origin + path;
+
 function pURL(n){ return BASE + 'page-' + (n<10?'0':'') + n + '.jpg'; }
 
-var TOTAL = 31;
-var isMobile = window.innerWidth <= 660;
-var chapters = {1:'封面',2:'目录',3:'目录',4:'第一章·立土',5:'第一章·立土',6:'第一章·立土',7:'第一章·立土',8:'第一章·立土',9:'第一章·立土',10:'第二章·盛土',11:'第二章·盛土',12:'第二章·盛土',13:'第二章·盛土',14:'第二章·盛土',15:'第三章·折土',16:'第三章·折土',17:'第三章·折土',18:'第三章·折土',19:'第三章·折土',20:'第四章·守土',21:'第四章·守土',22:'第四章·守土',23:'第四章·守土',24:'第四章·守土',25:'第五章·生土',26:'第五章·生土',27:'第五章·生土',28:'第五章·生土',29:'第五章·生土',30:'第六章·归根',31:'第六章·归根'};
+var TOTAL=31,isMobile=window.innerWidth<=660;
+var chapters={1:'封面',2:'目录',3:'目录',4:'第一章·立土',5:'第一章·立土',6:'第一章·立土',7:'第一章·立土',8:'第一章·立土',9:'第一章·立土',10:'第二章·盛土',11:'第二章·盛土',12:'第二章·盛土',13:'第二章·盛土',14:'第二章·盛土',15:'第三章·折土',16:'第三章·折土',17:'第三章·折土',18:'第三章·折土',19:'第三章·折土',20:'第四章·守土',21:'第四章·守土',22:'第四章·守土',23:'第四章·守土',24:'第四章·守土',25:'第五章·生土',26:'第五章·生土',27:'第五章·生土',28:'第五章·生土',29:'第五章·生土',30:'第六章·归根',31:'第六章·归根'};
+var loadingEl=document.getElementById('loading');
+var indicator=document.getElementById('indicator');
+var progress=document.getElementById('progress');
+var prevBtn=document.getElementById('prev-btn');
+var nextBtn=document.getElementById('next-btn');
 
-var loadingEl = document.getElementById('loading');
-var indicator = document.getElementById('indicator');
-var progress = document.getElementById('progress');
-var prevBtn = document.getElementById('prev-btn');
-var nextBtn = document.getElementById('next-btn');
+// Preload image and return promise
+function preload(n){
+  return new Promise(function(resolve){
+    var img = new Image();
+    img.onload = function(){ resolve(true); };
+    img.onerror = function(){ resolve(false); };
+    img.src = pURL(n);
+  });
+}
 
-// ====== DESKTOP ======
-var LEAVES = 15;
-var leafIdx = 0;
-var book = document.getElementById('book');
+/* DESKTOP */
+var LEAVES=15,leafIdx=0;
+var book=document.getElementById('book');
 
 function buildDesktop(){
-  book.innerHTML = '';
+  book.innerHTML='';
   for(var i=0;i<LEAVES;i++){
-    var leaf = document.createElement('div');
-    leaf.className = 'leaf';
-    leaf.dataset.leaf = i;
-    var f = document.createElement('div');
-    f.className = 'page front';
-    f.dataset.page = 2*i+1;
-    f.style.backgroundImage = 'url("'+pURL(2*i+1)+'")';
+    var leaf=document.createElement('div');
+    leaf.className='leaf';
+    leaf.dataset.leaf=i;
+    
+    var f=document.createElement('div');
+    f.className='page front';
+    f.dataset.page=2*i+1;
+    var fImg=document.createElement('img');
+    fImg.src=pURL(2*i+1);
+    f.appendChild(fImg);
     leaf.appendChild(f);
-    var b = document.createElement('div');
-    b.className = 'page back';
-    b.dataset.page = 2*i+2;
-    b.style.backgroundImage = 'url("'+pURL(2*i+2)+'")';
+    
+    var b=document.createElement('div');
+    b.className='page back';
+    b.dataset.page=2*i+2;
+    var bImg=document.createElement('img');
+    bImg.src=pURL(2*i+2);
+    b.appendChild(bImg);
     leaf.appendChild(b);
+    
     book.appendChild(leaf);
   }
-  var sr = document.createElement('div');
-  sr.className = 'right-page';
-  sr.id = 'static-right';
-  sr.dataset.page = '31';
-  sr.style.backgroundImage = 'url("'+pURL(31)+'")';
-  sr.style.display = 'none';
+  var sr=document.createElement('div');
+  sr.className='right-page';
+  sr.id='static-right';
+  sr.dataset.page='31';
+  var srImg=document.createElement('img');
+  srImg.src=pURL(31);
+  sr.appendChild(srImg);
+  sr.style.display='none';
   book.appendChild(sr);
 }
 
-function updateZ(){
-  var ls = book.querySelectorAll('.leaf');
-  for(var i=0;i<ls.length;i++) ls[i].style.zIndex = i<leafIdx ? i+1 : LEAVES-i;
-}
-
-function dNext(){
-  if(leafIdx>=LEAVES) return;
-  var l = book.querySelector('[data-leaf="'+leafIdx+'"]');
-  if(l) l.classList.add('flipped');
-  leafIdx++;
-  updateZ();
-  dUI();
-}
-
-function dPrev(){
-  if(leafIdx<=0) return;
-  leafIdx--;
-  var l = book.querySelector('[data-leaf="'+leafIdx+'"]');
-  if(l) l.classList.remove('flipped');
-  updateZ();
-  dUI();
-}
-
+function updateZ(){var ls=book.querySelectorAll('.leaf');for(var i=0;i<ls.length;i++)ls[i].style.zIndex=i<leafIdx?i+1:LEAVES-i;}
+function dNext(){if(leafIdx>=LEAVES)return;var l=book.querySelector('[data-leaf="'+leafIdx+'"]');if(l)l.classList.add('flipped');leafIdx++;updateZ();dUI();}
+function dPrev(){if(leafIdx<=0)return;leafIdx--;var l=book.querySelector('[data-leaf="'+leafIdx+'"]');if(l)l.classList.remove('flipped');updateZ();dUI();}
 function dUI(){
-  var sr = document.getElementById('static-right');
-  if(leafIdx===0){ if(sr) sr.style.display='none'; indicator.textContent='封面 · 第1页'; }
-  else if(leafIdx===LEAVES){ if(sr){sr.style.display='block';sr.style.zIndex=0;} indicator.textContent='第六章·归根 · 第30-31页'; }
-  else{
-    if(sr) sr.style.display='none';
-    var lp=2*(leafIdx-1)+2, rp=2*leafIdx+1;
-    if(lp===2&&rp===3) indicator.textContent='目录 · 第2-3页';
-    else{var lc=chapters[lp]||'',rc=chapters[rp]||'';indicator.textContent=(lc===rc?lc:lc+'/'+rc)+' · 第'+lp+'-'+rp+'页';}
-  }
-  progress.style.width=(leafIdx/LEAVES*100)+'%';
-  prevBtn.disabled=leafIdx===0;
-  nextBtn.disabled=leafIdx>=LEAVES;
+  var sr=document.getElementById('static-right');
+  if(leafIdx===0){if(sr)sr.style.display='none';indicator.textContent='封面 · 第1页';}
+  else if(leafIdx===LEAVES){if(sr){sr.style.display='block';sr.style.zIndex=0;}indicator.textContent='第六章·归根 · 第30-31页';}
+  else{if(sr)sr.style.display='none';var lp=2*(leafIdx-1)+2,rp=2*leafIdx+1;if(lp===2&&rp===3)indicator.textContent='目录 · 第2-3页';else{var lc=chapters[lp]||'',rc=chapters[rp]||'';indicator.textContent=(lc===rc?lc:lc+'/'+rc)+' · 第'+lp+'-'+rp+'页';}}
+  progress.style.width=(leafIdx/LEAVES*100)+'%';prevBtn.disabled=leafIdx===0;nextBtn.disabled=leafIdx>=LEAVES;
 }
 
-// Desktop double-click zoom
-document.getElementById('desktop').addEventListener('dblclick', function(e){
-  var pg = e.target.closest('.page, .right-page');
-  if(!pg) return;
+document.getElementById('desktop').addEventListener('dblclick',function(e){
+  var pg=e.target.closest('.page, .right-page');
+  if(!pg)return;
   openZoom(parseInt(pg.dataset.page||'1',10));
 });
 
-// ====== MOBILE: Simple slide reader ======
-var mPage = 0; // 0-based
-var mBusy = false;
-var slide0 = document.getElementById('slide-0');
-var slide1 = document.getElementById('slide-1');
-var img0 = document.getElementById('img-0');
-var img1 = document.getElementById('img-1');
-var activeSlide = slide0;
-var inactiveSlide = slide1;
-var activeImg = img0;
-var inactiveImg = img1;
+/* MOBILE */
+var mPage=0,mBusy=false;
+var slide0=document.getElementById('slide-0'),slide1=document.getElementById('slide-1');
+var img0=document.getElementById('img-0'),img1=document.getElementById('img-1');
+var activeSlide=slide0,inactiveSlide=slide1,activeImg=img0,inactiveImg=img1;
 
-function mUI(){
-  var pn = mPage+1;
-  indicator.textContent = chapters[pn]+' · 第'+pn+'页 / 共'+TOTAL+'页';
-  progress.style.width = (pn/TOTAL*100)+'%';
-}
+function mUI(){var pn=mPage+1;indicator.textContent=chapters[pn]+' · 第'+pn+'页 / 共'+TOTAL+'页';progress.style.width=(pn/TOTAL*100)+'%';}
 
 function mInit(){
-  activeImg.src = pURL(1);
-  // Preload next
-  inactiveImg.src = pURL(2);
+  activeImg.src=pURL(1);
+  inactiveImg.src=pURL(2);
   mUI();
 }
 
 function mGoNext(){
-  if(mBusy||mPage>=TOTAL-1) return;
-  mBusy = true;
-  mPage++;
-  // Load next page into inactive slide
-  inactiveImg.src = pURL(mPage+1);
-  // Slide: active goes left, inactive comes from right
+  if(mBusy||mPage>=TOTAL-1)return;
+  mBusy=true;mPage++;
+  inactiveImg.src=pURL(mPage+1);
   activeSlide.classList.add('left');
-  inactiveSlide.className = 'm-slide';
-  // After transition
+  inactiveSlide.className='m-slide';
   setTimeout(function(){
-    // Swap
-    var tmp = activeSlide;
-    activeSlide = inactiveSlide;
-    inactiveSlide = tmp;
-    var tmpI = activeImg;
-    activeImg = inactiveImg;
-    inactiveImg = tmpI;
-    // Reset old active (now inactive)
-    inactiveSlide.className = 'm-slide hide';
-    // Preload next
-    if(mPage+1<TOTAL) inactiveImg.src = pURL(mPage+2);
-    mUI();
-    mBusy = false;
-  }, 360);
+    var t=activeSlide;activeSlide=inactiveSlide;inactiveSlide=t;
+    var ti=activeImg;activeImg=inactiveImg;inactiveImg=ti;
+    inactiveSlide.className='m-slide hide';
+    if(mPage+1<TOTAL)inactiveImg.src=pURL(mPage+2);
+    mUI();mBusy=false;
+  },360);
 }
 
 function mGoPrev(){
-  if(mBusy||mPage<=0) return;
-  mBusy = true;
-  mPage--;
-  // Load prev page into inactive slide
-  inactiveImg.src = pURL(mPage+1);
-  // Slide: active goes right, inactive comes from left
+  if(mBusy||mPage<=0)return;
+  mBusy=true;mPage--;
+  inactiveImg.src=pURL(mPage+1);
   activeSlide.classList.add('right');
-  inactiveSlide.className = 'm-slide';
+  inactiveSlide.className='m-slide';
   setTimeout(function(){
-    var tmp = activeSlide;
-    activeSlide = inactiveSlide;
-    inactiveSlide = tmp;
-    var tmpI = activeImg;
-    activeImg = inactiveImg;
-    inactiveImg = tmpI;
-    inactiveSlide.className = 'm-slide hide';
-    if(mPage>0) inactiveImg.src = pURL(mPage);
-    mUI();
-    mBusy = false;
-  }, 360);
+    var t=activeSlide;activeSlide=inactiveSlide;inactiveSlide=t;
+    var ti=activeImg;activeImg=inactiveImg;inactiveImg=ti;
+    inactiveSlide.className='m-slide hide';
+    if(mPage>0)inactiveImg.src=pURL(mPage);
+    mUI();mBusy=false;
+  },360);
 }
 
-// Touch handling
-var tsx=0, tsy=0, tmoved=false, ttime=0;
+var tsx=0,tsy=0,tmoved=false,ttime=0;
+var mViewport=document.getElementById('m-viewport');
+mViewport.addEventListener('touchstart',function(e){
+  if(mBusy)return;
+  var t=e.touches;
+  if(t.length===1){tsx=t[0].clientX;tsy=t[0].clientY;tmoved=false;ttime=Date.now();}
+  else if(t.length===2){e.preventDefault();openZoom(mPage+1);}
+},{passive:true});
+mViewport.addEventListener('touchmove',function(e){
+  var t=e.touches;
+  if(t.length===1){var dx=t[0].clientX-tsx;if(Math.abs(dx)>8)tmoved=true;}
+},{passive:true});
+mViewport.addEventListener('touchend',function(e){
+  if(mBusy||!tmoved)return;
+  var dx=e.changedTouches[0].clientX-tsx,dy=e.changedTouches[0].clientY-tsy;
+  if(Math.abs(dx)>Math.abs(dy)*1.2&&Math.abs(dx)>40){if(dx<0)mGoNext();else mGoPrev();}
+},{passive:true});
 
-function onTouchStart(e){
-  if(mBusy) return;
-  var t = e.touches;
-  if(t.length===1){
-    tsx=t[0].clientX; tsy=t[0].clientY; tmoved=false; ttime=Date.now();
-  } else if(t.length===2){
-    e.preventDefault();
-    openZoom(mPage+1);
-  }
-}
-
-function onTouchMove(e){
-  var t = e.touches;
-  if(t.length===1){
-    var dx = t[0].clientX - tsx;
-    var dy = t[0].clientY - tsy;
-    if(Math.abs(dx)>8) tmoved=true;
-  }
-}
-
-function onTouchEnd(e){
-  if(mBusy) return;
-  if(!tmoved) return; // it was a tap, not a swipe
-  var dx = e.changedTouches[0].clientX - tsx;
-  var dy = e.changedTouches[0].clientY - tsy;
-  var dt = Date.now() - ttime;
-  if(Math.abs(dx) > Math.abs(dy)*1.2 && Math.abs(dx) > 40){
-    if(dx < 0) mGoNext();
-    else mGoPrev();
-  }
-}
-
-var mViewport = document.getElementById('m-viewport');
-mViewport.addEventListener('touchstart', onTouchStart, {passive:true});
-mViewport.addEventListener('touchmove', onTouchMove, {passive:true});
-mViewport.addEventListener('touchend', onTouchEnd, {passive:true});
-
-// Double-tap to zoom
-var lastTap = 0;
-mViewport.addEventListener('click', function(){
-  if(tmoved) return;
-  var now = Date.now();
-  if(now - lastTap < 350){
-    openZoom(mPage+1);
-    lastTap = 0;
-  } else {
-    lastTap = now;
-  }
+var lastTap=0;
+mViewport.addEventListener('click',function(){
+  if(tmoved)return;
+  var now=Date.now();
+  if(now-lastTap<350){openZoom(mPage+1);lastTap=0;}else{lastTap=now;}
+});
+document.addEventListener('click',function(e){
+  if(!isMobile||mBusy||tmoved)return;
+  var x=e.clientX;
+  if(x<window.innerWidth*0.2)mGoPrev();
+  else if(x>window.innerWidth*0.8)mGoNext();
 });
 
-// Tap zones for mobile
-document.addEventListener('click', function(e){
-  if(!isMobile || mBusy) return;
-  if(tmoved) return;
-  var x = e.clientX;
-  if(x < window.innerWidth*0.2) mGoPrev();
-  else if(x > window.innerWidth*0.8) mGoNext();
-});
-
-// ====== Zoom ======
-var zoom = document.getElementById('zoom');
-var zoomImg = document.getElementById('zoom-img');
-var zoomClose = document.getElementById('zoom-close');
-var zScale=1, zX=0, zY=0;
-var zDrag=false, zSX=0, zSY=0;
-var zID=0, zIS=1, zIX=0, zIY=0;
-
-function zApply(){
-  zoomImg.style.transform = 'translate(-50%,-50%) translate('+zX+'px,'+zY+'px) scale('+zScale+')';
-}
-
+/* ZOOM */
+var zoom=document.getElementById('zoom'),zoomImg=document.getElementById('zoom-img'),zoomClose=document.getElementById('zoom-close');
+var zScale=1,zX=0,zY=0,zDrag=false,zSX=0,zSY=0,zID=0,zIS=1,zIX=0,zIY=0;
+function zApply(){zoomImg.style.transform='translate(-50%,-50%) translate('+zX+'px,'+zY+'px) scale('+zScale+')';}
 function openZoom(n){
-  zoomImg.src = pURL(n);
+  zoomImg.src=pURL(n);
   zoom.classList.add('on');
-  zScale=1; zX=0; zY=0;
-  zoomImg.onload = function(){
-    var w = zoomImg.naturalWidth || zoomImg.width;
-    var h = zoomImg.naturalHeight || zoomImg.height;
-    var vw = window.innerWidth, vh = window.innerHeight;
-    if(w > vw*0.92 || h > vh*0.88){
-      zScale = Math.min(vw*0.92/w, vh*0.88/h);
-    }
+  zScale=1;zX=0;zY=0;
+  zoomImg.onload=function(){
+    var w=zoomImg.naturalWidth||zoomImg.width,h=zoomImg.naturalHeight||zoomImg.height;
+    var vw=window.innerWidth,vh=window.innerHeight;
+    if(w>vw*0.92||h>vh*0.88)zScale=Math.min(vw*0.92/w,vh*0.88/h);
     zApply();
   };
 }
+function closeZoom(){zoom.classList.remove('on');}
+zoomClose.onclick=closeZoom;
+zoom.addEventListener('click',function(e){if(e.target===zoom)closeZoom();});
+zoom.addEventListener('mousedown',function(e){if(e.target===zoomClose)return;zDrag=true;zSX=e.clientX-zX;zSY=e.clientY-zY;e.preventDefault();});
+document.addEventListener('mousemove',function(e){if(zDrag){zX=e.clientX-zSX;zY=e.clientY-zSY;zApply();}});
+document.addEventListener('mouseup',function(){zDrag=false;});
+zoom.addEventListener('wheel',function(e){e.preventDefault();var ns=Math.max(0.2,Math.min(15,zScale*(e.deltaY>0?0.9:1.1)));var r=zoom.getBoundingClientRect();var cx=e.clientX-r.left-r.width/2,cy=e.clientY-r.top-r.height/2;var ratio=ns/zScale;zX=cx-ratio*(cx-zX);zY=cy-ratio*(cy-zY);zScale=ns;zApply();},{passive:false});
+zoom.addEventListener('touchstart',function(e){if(e.touches.length===1){zDrag=true;zSX=e.touches[0].clientX-zX;zSY=e.touches[0].clientY-zY;}else if(e.touches.length===2){zDrag=false;var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;zID=Math.max(1,Math.sqrt(dx*dx+dy*dy));zIS=zScale;zIX=zX;zIY=zY;}},{passive:true});
+zoom.addEventListener('touchmove',function(e){e.preventDefault();if(e.touches.length===1&&zDrag){zX=e.touches[0].clientX-zSX;zY=e.touches[0].clientY-zSY;zApply();}else if(e.touches.length===2&&zID>0){var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;var d=Math.sqrt(dx*dx+dy*dy);zScale=Math.max(0.2,Math.min(10,zIS*(d/zID)));zX=zIX;zY=zIY;zApply();}},{passive:false});
+zoom.addEventListener('touchend',function(e){if(e.touches.length===0){zDrag=false;zID=0;}},{passive:true});
 
-function closeZoom(){ zoom.classList.remove('on'); }
-
-zoomClose.onclick = closeZoom;
-zoom.addEventListener('click', function(e){ if(e.target===zoom) closeZoom(); });
-
-zoom.addEventListener('mousedown', function(e){
-  if(e.target===zoomClose) return;
-  zDrag=true; zSX=e.clientX-zX; zSY=e.clientY-zY; e.preventDefault();
-});
-document.addEventListener('mousemove', function(e){ if(zDrag){zX=e.clientX-zSX; zY=e.clientY-zSY; zApply();} });
-document.addEventListener('mouseup', function(){ zDrag=false; });
-
-zoom.addEventListener('wheel', function(e){
-  e.preventDefault();
-  var ns = Math.max(0.2, Math.min(15, zScale*(e.deltaY>0?0.9:1.1)));
-  var r = zoom.getBoundingClientRect();
-  var cx=e.clientX-r.left-r.width/2, cy=e.clientY-r.top-r.height/2;
-  var ratio = ns/zScale;
-  zX = cx-ratio*(cx-zX); zY = cy-ratio*(cy-zY);
-  zScale = ns; zApply();
-}, {passive:false});
-
-zoom.addEventListener('touchstart', function(e){
-  if(e.touches.length===1){
-    zDrag=true; zSX=e.touches[0].clientX-zX; zSY=e.touches[0].clientY-zY;
-  } else if(e.touches.length===2){
-    zDrag=false;
-    var dx=e.touches[0].clientX-e.touches[1].clientX;
-    var dy=e.touches[0].clientY-e.touches[1].clientY;
-    zID=Math.max(1,Math.sqrt(dx*dx+dy*dy));
-    zIS=zScale; zIX=zX; zIY=zY;
-  }
-}, {passive:true});
-
-zoom.addEventListener('touchmove', function(e){
-  e.preventDefault();
-  if(e.touches.length===1 && zDrag){
-    zX=e.touches[0].clientX-zSX; zY=e.touches[0].clientY-zSY; zApply();
-  } else if(e.touches.length===2 && zID>0){
-    var dx=e.touches[0].clientX-e.touches[1].clientX;
-    var dy=e.touches[0].clientY-e.touches[1].clientY;
-    var d=Math.sqrt(dx*dx+dy*dy);
-    zScale=Math.max(0.2,Math.min(10,zIS*(d/zID)));
-    zX=zIX; zY=zIY; zApply();
-  }
-}, {passive:false});
-
-zoom.addEventListener('touchend', function(e){
-  if(e.touches.length===0){ zDrag=false; zID=0; }
-}, {passive:true});
-
-// ====== Keyboard ======
-document.addEventListener('keydown', function(e){
-  if(e.key==='Escape'){ closeZoom(); return; }
-  if(isMobile) return;
-  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){ e.preventDefault(); dNext(); }
-  else if(e.key==='ArrowLeft'||e.key==='PageUp'){ e.preventDefault(); dPrev(); }
-  else if(e.key==='Home'){ while(leafIdx>0) dPrev(); }
-  else if(e.key==='End'){ while(leafIdx<LEAVES) dNext(); }
+/* KEYBOARD */
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){closeZoom();return;}
+  if(isMobile)return;
+  if(e.key==='ArrowRight'||e.key===' '||e.key==='PageDown'){e.preventDefault();dNext();}
+  else if(e.key==='ArrowLeft'||e.key==='PageUp'){e.preventDefault();dPrev();}
+  else if(e.key==='Home'){while(leafIdx>0)dPrev();}
+  else if(e.key==='End'){while(leafIdx<LEAVES)dNext();}
 });
 
-// Desktop wheel
+/* DESKTOP WHEEL */
 var wl=false;
-document.addEventListener('wheel', function(e){
-  if(isMobile) return;
-  if(wl) return;
-  if(Math.abs(e.deltaY)<30 && Math.abs(e.deltaX)<30) return;
-  if(e.deltaY>0||e.deltaX>0) dNext(); else dPrev();
-  wl=true; setTimeout(function(){wl=false;},500);
-}, {passive:true});
+document.addEventListener('wheel',function(e){
+  if(isMobile||wl)return;
+  if(Math.abs(e.deltaY)<30&&Math.abs(e.deltaX)<30)return;
+  if(e.deltaY>0||e.deltaX>0)dNext();else dPrev();
+  wl=true;setTimeout(function(){wl=false;},500);
+},{passive:true});
 
-// Desktop touch
+/* DESKTOP TOUCH */
 var dtsx=0,dtsy=0;
-document.addEventListener('touchstart', function(e){
-  if(!isMobile){ dtsx=e.touches[0].clientX; dtsy=e.touches[0].clientY; }
-}, {passive:true});
-document.addEventListener('touchend', function(e){
-  if(isMobile) return;
-  var dx=e.changedTouches[0].clientX-dtsx, dy=e.changedTouches[0].clientY-dtsy;
-  if(Math.abs(dx)>60 && Math.abs(dx)>Math.abs(dy)*1.5){
-    if(dx<0) dNext(); else dPrev();
-  }
-}, {passive:true});
+document.addEventListener('touchstart',function(e){if(!isMobile){dtsx=e.touches[0].clientX;dtsy=e.touches[0].clientY;}},{passive:true});
+document.addEventListener('touchend',function(e){
+  if(isMobile)return;
+  var dx=e.changedTouches[0].clientX-dtsx,dy=e.changedTouches[0].clientY-dtsy;
+  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx<0)dNext();else dPrev();}
+},{passive:true});
 
-// Prevent WeChat gesture
-document.addEventListener('gesturestart', function(e){ e.preventDefault(); }, {passive:false});
+document.addEventListener('gesturestart',function(e){e.preventDefault();},{passive:false});
 
-// ====== Init ======
+/* INIT */
 if(!isMobile){
-  // Desktop
-  document.getElementById('click-right').onclick = dNext;
-  document.getElementById('click-left').onclick = dPrev;
-  prevBtn.onclick = dPrev;
-  nextBtn.onclick = dNext;
-  buildDesktop();
-  updateZ();
-  dUI();
-  // Hide loading after a short delay
-  setTimeout(function(){
+  document.getElementById('click-right').onclick=dNext;
+  document.getElementById('click-left').onclick=dPrev;
+  prevBtn.onclick=dPrev;nextBtn.onclick=dNext;
+  buildDesktop();updateZ();dUI();
+  // Wait for first 2 images then hide loading
+  Promise.all([preload(1),preload(2)]).then(function(){
     loadingEl.classList.add('gone');
-    setTimeout(function(){ loadingEl.remove(); }, 400);
-  }, 600);
-} else {
-  // Mobile
-  mInit();
-  // Hide loading when first image loads
-  activeImg.onload = function(){
-    loadingEl.classList.add('gone');
-    setTimeout(function(){ loadingEl.remove(); }, 400);
-  };
-  // Fallback: hide after 5s
+    setTimeout(function(){loadingEl.remove();},400);
+  });
+  // Fallback after 8s
   setTimeout(function(){
     if(!loadingEl.classList.contains('gone')){
       loadingEl.classList.add('gone');
-      setTimeout(function(){ loadingEl.remove(); }, 400);
+      setTimeout(function(){loadingEl.remove();},400);
     }
-  }, 5000);
+  },8000);
+}else{
+  mInit();
+  activeImg.onload=function(){
+    loadingEl.classList.add('gone');
+    setTimeout(function(){loadingEl.remove();},400);
+  };
+  setTimeout(function(){
+    if(!loadingEl.classList.contains('gone')){
+      loadingEl.classList.add('gone');
+      setTimeout(function(){loadingEl.remove();},400);
+    }
+  },5000);
 }
-
 })();
 </script>
 </body>
